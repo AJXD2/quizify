@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, integer } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -60,4 +60,75 @@ export const twoFactor = pgTable('two_factor', {
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' })
+});
+
+// Application Tables
+
+export const quiz = pgTable('quiz', {
+	id: uuid('id').primaryKey(),
+	title: text('title').notNull(),
+	description: text('description'),
+	createdAt: timestamp('created_at').notNull(),
+	updatedAt: timestamp('updated_at').notNull(),
+	creatorId: text('creator_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' })
+});
+
+export const question = pgTable('question', {
+	id: uuid('id').primaryKey(),
+	quizId: uuid('quiz_id')
+		.notNull()
+		.references(() => quiz.id, { onDelete: 'cascade' }),
+	text: text('text').notNull(),
+	createdAt: timestamp('created_at').notNull(),
+	updatedAt: timestamp('updated_at').notNull()
+});
+
+export const answer = pgTable('answer', {
+	id: uuid('id').primaryKey(),
+	questionId: uuid('question_id')
+		.notNull()
+		.references(() => question.id, { onDelete: 'cascade' }),
+	text: text('text').notNull(),
+	isCorrect: boolean('is_correct').notNull()
+});
+
+export const attempt = pgTable('attempt', {
+	id: uuid('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	quizId: uuid('quiz_id')
+		.notNull()
+		.references(() => quiz.id, { onDelete: 'cascade' }),
+	startedAt: timestamp('started_at').notNull(),
+	completedAt: timestamp('completed_at')
+});
+
+export const attemptAnswer = pgTable('attempt_answer', {
+	id: uuid('id').primaryKey(),
+	attemptId: uuid('attempt_id')
+		.notNull()
+		.references(() => attempt.id, { onDelete: 'cascade' }),
+	questionId: uuid('question_id')
+		.notNull()
+		.references(() => question.id, { onDelete: 'cascade' }),
+	answerId: uuid('answer_id')
+		.notNull()
+		.references(() => answer.id, { onDelete: 'cascade' }),
+	isCorrect: boolean('is_correct').notNull()
+});
+
+export const leaderboard = pgTable('leaderboard', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	quizId: uuid('quiz_id')
+		.notNull()
+		.references(() => quiz.id, { onDelete: 'cascade' }),
+	score: integer('score').notNull(),
+	attempts: integer('attempts').notNull(),
+	lastAttemptAt: timestamp('last_attempt_at').notNull()
 });
