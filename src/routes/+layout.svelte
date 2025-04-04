@@ -49,26 +49,51 @@
 			</div>
 
 			{#if $session.data}
-				<a
-					href="/profile"
-					class="btn btn-ghost btn-circle avatar hidden items-center justify-center md:flex"
-				>
-					<div class="flex h-10 w-10 items-center justify-center rounded-full p-2">
-						<img
-							alt="User avatar"
-							class="h-full w-full rounded-full object-cover"
-							src={$session.data?.user.image ??
-								`https://api.dicebear.com/9.x/initials/svg?seed=${$session.data?.user.name}`}
-						/>
-					</div>
-				</a>
+				<div class="dropdown dropdown-end hidden md:block">
+					<label tabindex="-1" class="btn btn-ghost btn-circle avatar">
+						<div class="flex h-10 w-10 items-center justify-center rounded-full p-2">
+							<img
+								alt="User avatar"
+								class="rounded-box h-full w-full object-cover"
+								src={$session.data?.user.image ??
+									`https://api.dicebear.com/9.x/initials/svg?seed=${$session.data?.user.name}`}
+							/>
+						</div>
+					</label>
+					<ul
+						tabindex="-1"
+						class="menu dropdown-content menu-sm rounded-box bg-base-200 z-[1] mt-3 w-52 p-2 shadow"
+					>
+						<li>
+							<a href="/profile" class="flex items-center gap-3">
+								<Icon icon="mdi:account" class="h-5 w-5" />
+								Profile
+							</a>
+						</li>
+						<li>
+							<a href="/account" class="flex items-center gap-3">
+								<Icon icon="mdi:cog" class="h-5 w-5" />
+								Account Settings
+							</a>
+						</li>
+						<li>
+							<button
+								onclick={() => authClient.signOut()}
+								class="text-error flex items-center gap-3"
+							>
+								<Icon icon="mdi:logout" class="h-5 w-5" />
+								Logout
+							</button>
+						</li>
+					</ul>
+				</div>
 			{:else}
 				<div class="flex gap-2">
-					<a href="/login" class="btn btn-outline hidden items-center justify-center md:flex">
+					<a href="/auth/login" class="btn btn-outline hidden items-center justify-center md:flex">
 						<span class="text-sm font-medium">Login</span>
 					</a>
-					<a href="/login" class="btn btn-primary hidden items-center justify-center md:flex">
-						<span class="text-sm font-medium">Sign Up</span>
+					<a href="/auth/signup" class="btn btn-primary hidden items-center justify-center md:flex">
+						<span class="text-sm font-medium">Get started</span>
 					</a>
 				</div>
 			{/if}

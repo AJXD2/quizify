@@ -8,7 +8,10 @@ export const auth = betterAuth({
 		provider: 'pg'
 	}),
 	appName: 'quizify',
-	plugins: [username(), twoFactor()]
+	plugins: [username(), twoFactor()],
+	emailAndPassword: {
+		enabled: true
+	}
 });
 
 export type Auth = typeof auth;
