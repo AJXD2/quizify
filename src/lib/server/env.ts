@@ -5,7 +5,10 @@ dotenv.config();
 
 const envSchema = z.object({
 	DATABASE_URL: z.string().url().describe('The database URL'),
-	NODE_ENV: z.enum(['development', 'production']).describe('The environment'),
+	NODE_ENV: z
+		.enum(['development', 'production'])
+		.describe('The environment')
+		.default('development'),
 	BETTER_AUTH_SECRET: z.string().describe('The better auth secret'),
 	BETTER_AUTH_URL: z.string().url().describe('The better auth URL'),
 	GOOGLE_CLIENT_ID: z.string().describe('The better auth google client ID'),
