@@ -46,6 +46,8 @@
 		"@iconify/svelte": "^4.2.0",
 		"@neondatabase/serverless": "^0.10.4",
 		"better-auth": "^1.2.5",
-		"drizzle-orm": "^0.40.0"
+		"dotenv": "^16.4.7",
+		"drizzle-orm": "^0.40.0",
+		"zod": "^3.24.2"
 	}
 }

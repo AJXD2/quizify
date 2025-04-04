@@ -3,6 +3,7 @@
 	import type { PageData } from './$types';
 	import { authClient } from '$lib/auth/client';
 	import { goto } from '$app/navigation';
+	import SocialProviders from '$lib/components/SocialProviders.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -94,16 +95,7 @@
 
 		<div class="divider my-6">OR</div>
 
-		<div class="flex flex-col gap-3">
-			<button class="btn btn-accent w-full gap-2">
-				<Icon icon="logos:github-icon" class="h-5 w-5" />
-				Continue with GitHub
-			</button>
-			<button class="btn btn-outline w-full gap-2">
-				<Icon icon="logos:google-icon" class="h-5 w-5" />
-				Continue with Google
-			</button>
-		</div>
+		<SocialProviders />
 
 		<p class="text-base-content/70 mt-6 text-center text-sm">
 			By signing up, you agree to our

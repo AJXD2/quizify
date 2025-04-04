@@ -50,13 +50,14 @@
 
 			{#if $session.data}
 				<div class="dropdown dropdown-end hidden md:block">
-					<label tabindex="-1" class="btn btn-ghost btn-circle avatar">
-						<div class="flex h-10 w-10 items-center justify-center rounded-full p-2">
+					<label for="avatar" tabindex="-1" class="btn btn-ghost btn-circle avatar">
+						<div class="h-11 w-11 rounded-full">
 							<img
+								id="avatar"
 								alt="User avatar"
-								class="rounded-box h-full w-full object-cover"
-								src={$session.data?.user.image ??
-									`https://api.dicebear.com/9.x/initials/svg?seed=${$session.data?.user.name}`}
+								class="h-full w-full rounded-full object-cover"
+								crossOrigin="anonymous"
+								src="/api/avatar"
 							/>
 						</div>
 					</label>
