@@ -38,7 +38,7 @@
 			{/each}
 		</div>
 		<div class="mt-4 flex items-center justify-center gap-4">
-			{#if !(page > 1)}
+			{#if page > 1}
 				<button
 					class="btn btn-primary btn-outline gap-2"
 					onclick={() => goto(`/quizzes?page=${page - 1}`)}
@@ -53,7 +53,7 @@
 					<span class="font-bold">{totalPages}</span>
 				</span>
 			</div>
-			{#if !(page < totalPages)}
+			{#if page < totalPages}
 				<button
 					class="btn btn-primary btn-outline gap-2"
 					onclick={() => goto(`/quizzes?page=${page + 1}`)}

@@ -2,6 +2,8 @@ import { db } from '$lib/server/db';
 import type { PageServerLoad } from './$types';
 import { count, desc } from 'drizzle-orm';
 import { quiz } from '$lib/server/db/schema';
+import type { QuizWithProfile } from '$lib';
+
 export const load = (async ({ url }) => {
 	let page = parseInt(url.searchParams.get('page') || '1');
 	if (isNaN(page) || page < 1) {
@@ -26,5 +28,9 @@ export const load = (async ({ url }) => {
 	const totalQuizzes = await db.select({ count: count() }).from(quiz);
 	const totalPages = Math.ceil(totalQuizzes[0].count / 20);
 
-	return { quizzes, page, totalPages };
+	return {
+		quizzes: quizzes as QuizWithProfile[],
+		page,
+		totalPages
+	};
 }) satisfies PageServerLoad;

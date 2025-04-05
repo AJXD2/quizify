@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { TQuizWithProfile } from '$lib';
-	const { quiz }: { quiz: TQuizWithProfile } = $props();
+	import type { QuizWithProfile } from '$lib';
+	const { quiz }: { quiz: QuizWithProfile } = $props();
 </script>
 
 <div class="card bg-base-200 w-full cursor-pointer transition-shadow duration-300 hover:shadow-lg">
