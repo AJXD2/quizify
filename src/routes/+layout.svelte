@@ -2,9 +2,33 @@
 	import '../app.css';
 	import Icon from '@iconify/svelte';
 	import { authClient } from '$lib/auth/client';
-	let { children } = $props();
+	import { banner } from '$lib/stores/banner';
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import Toaster from '$lib/components/Toaster.svelte';
 
+	let { children } = $props();
 	const session = authClient.useSession();
+
+	onMount(() => {
+		if ($session.data?.user) {
+			// If user is logged in, check if they have a username
+			if (!$session.data?.user.username) {
+				banner.set({
+					message: 'Please finish setting up your account',
+					type: 'warning',
+					icon: 'mdi:information',
+					action: {
+						label: 'Finish setting up',
+						callback: () => {
+							goto('/account');
+							banner.set(null);
+						}
+					}
+				});
+			}
+		}
+	});
 </script>
 
 <div class="bg-base-100 min-h-screen">
@@ -12,7 +36,7 @@
 		<div class="navbar-start">
 			<a href="/" class="btn btn-ghost text-xl">QuizMaster</a>
 		</div>
-		<div class="navbar-center hidden lg:flex">
+		<div class="navbar-center hidden md:flex">
 			<ul class="menu menu-horizontal px-1">
 				<li><a href="/quizzes">Browse Quizzes</a></li>
 				<li><a href="/create">Create Quiz</a></li>
@@ -79,7 +103,7 @@
 						</li>
 						<li>
 							<button
-								onclick={() => authClient.signOut()}
+								onclick={() => authClient.signOut().then(() => goto('/'))}
 								class="text-error flex items-center gap-3"
 							>
 								<Icon icon="mdi:logout" class="h-5 w-5" />
@@ -100,7 +124,23 @@
 			{/if}
 		</div>
 	</header>
-
+	{#if $banner}
+		<div
+			class="alert mx-auto mt-2 w-full max-w-2xl"
+			class:alert-warning={$banner.type === 'warning'}
+			class:alert-error={$banner.type === 'error'}
+			class:alert-success={$banner.type === 'success'}
+			class:alert-info={$banner.type === 'info'}
+		>
+			<Icon icon={$banner.icon || 'mdi:information'} class="h-5 w-5" />
+			<span>{$banner.message}</span>
+			{#if $banner.action}
+				<button onclick={$banner.action.callback} class="btn btn-sm btn-outline">
+					{$banner.action.label}
+				</button>
+			{/if}
+		</div>
+	{/if}
 	<main class="container mx-auto px-4 py-8">
 		<span class="text-sm font-medium"></span>
 
@@ -132,3 +172,6 @@
 		<p>Copyright © {new Date().getFullYear()} - QuizMaster. All rights reserved.</p>
 	</div>
 </footer>
+
+<!-- Add Toaster component at the end of the page -->
+<Toaster max={3} />

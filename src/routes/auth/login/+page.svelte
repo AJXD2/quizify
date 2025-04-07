@@ -4,13 +4,14 @@
 	import { authClient } from '$lib/auth/client';
 	import { goto } from '$app/navigation';
 	import SocialProviders from '$lib/components/SocialProviders.svelte';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
-
 	let email = $state('');
 	let password = $state('');
 	let remember = $state(false);
 	let error = $state('');
+	let redirectTo = $state(page.url.searchParams.get('redirectTo') || '/');
 	const handleSubmit = async () => {
 		const data = await authClient.signIn.email({
 			email,
@@ -20,7 +21,7 @@
 		if (data.error?.message) {
 			error = data.error.message;
 		} else {
-			goto('/');
+			goto(redirectTo);
 		}
 	};
 </script>
@@ -95,7 +96,7 @@
 
 		<div class="divider my-6">OR</div>
 
-		<SocialProviders />
+		<SocialProviders {redirectTo} />
 
 		<p class="text-base-content/70 mt-6 text-center text-sm">
 			By signing up, you agree to our

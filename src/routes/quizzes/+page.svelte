@@ -11,7 +11,7 @@
 <div class="flex flex-col gap-6 p-6">
 	<div class="flex items-center justify-between">
 		<h1
-			class="from-primary to-secondary bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent"
+			class="from-primary to-accent bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent"
 		>
 			Discover Quizzes
 		</h1>

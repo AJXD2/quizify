@@ -14,7 +14,8 @@ const envSchema = z.object({
 	GOOGLE_CLIENT_ID: z.string().describe('The better auth google client ID'),
 	GOOGLE_CLIENT_SECRET: z.string().describe('The better auth google client secret'),
 	DISCORD_CLIENT_ID: z.string().describe('The discord client ID'),
-	DISCORD_CLIENT_SECRET: z.string().describe('The discord client secret')
+	DISCORD_CLIENT_SECRET: z.string().describe('The discord client secret'),
+	RESEND_API_KEY: z.string().describe('The resend API key')
 });
 
 export const env = envSchema.parse(process.env);

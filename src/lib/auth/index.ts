@@ -3,6 +3,7 @@ import { db } from '../server/db';
 import { twoFactor, username } from 'better-auth/plugins';
 import { betterAuth } from 'better-auth';
 import { env } from '../server/env';
+import { sendEmail } from '$lib/server/email';
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -21,8 +22,52 @@ export const auth = betterAuth({
 	appName: 'quizify',
 	plugins: [username(), twoFactor()],
 	emailAndPassword: {
-		enabled: true
+		enabled: true,
+		minPasswordLength: 8,
+		maxPasswordLength: 128,
+		requireEmailVerification: true,
+		async sendResetPassword(data) {
+			const response = await sendEmail(
+				data.user.email,
+				'Reset Password',
+				`Click <a href="${data.url}">here</a> to reset your password`
+			);
+			console.log(response);
+		}
 	},
+	emailVerification: {
+		sendOnSignUp: true,
+		async sendVerificationEmail(data) {
+			await sendEmail(
+				data.user.email,
+				'Verify Email',
+				`Click <a href="${data.url}">here</a> to verify your email`
+			);
+		}
+	},
+	user: {
+		changeEmail: {
+			enabled: true,
+			async sendChangeEmailVerification(data) {
+				await sendEmail(
+					data.user.email,
+					'Change Email',
+					`Click <a href="${data.url}">here</a> to change your email`
+				);
+			}
+		},
+		deleteUser: {
+			enabled: true,
+			async sendDeleteAccountVerification(data) {
+				await sendEmail(
+					data.user.email,
+					'Delete Account',
+					`Click <a href="${data.url}">here</a> to delete your account`
+				);
+			}
+		}
+	},
+
 	url: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET
 });

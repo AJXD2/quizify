@@ -73,15 +73,15 @@
 				<div class="stats shadow">
 					<div class="stat">
 						<div class="stat-title">Active Users</div>
-						<div class="stat-value text-primary">10K+</div>
+						<div class="stat-value text-primary">N/A</div>
 					</div>
 					<div class="stat">
 						<div class="stat-title">Quizzes Created</div>
-						<div class="stat-value text-secondary">50K+</div>
+						<div class="stat-value text-secondary">N/A</div>
 					</div>
 					<div class="stat">
 						<div class="stat-title">Topics</div>
-						<div class="stat-value text-accent">100+</div>
+						<div class="stat-value text-accent">N/A</div>
 					</div>
 				</div>
 			</div>
