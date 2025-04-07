@@ -51,7 +51,13 @@ export const load = (async ({ params, request }) => {
 			? and(eq(attempt.quizId, params.quizId), eq(attempt.userId, session.user.id))
 			: eq(attempt.quizId, params.quizId),
 		with: {
-			user: true
+			user: {
+				columns: {
+					username: true,
+					image: true
+				}
+			},
+			answers: true
 		}
 	});
 

@@ -2,6 +2,9 @@
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import Profile from '$lib/components/Profile.svelte';
+	import AttemptCard from '$lib/components/AttemptCard.svelte';
+	import { goto } from '$app/navigation';
+	import AttemptTable from '$lib/components/AttemptTable.svelte';
 
 	let { data }: { data: PageData } = $props();
 	const { quiz, userAttempts } = data;
@@ -10,6 +13,10 @@
 	const totalQuestions = quiz.questions?.length || 0;
 	const estimatedTime = quiz.timeLimit || `${Math.max(totalQuestions * 2, 10)} min`;
 	const creationDate = new Date(quiz.createdAt).toLocaleDateString();
+
+	const takeQuiz = () => {
+		goto(`/quizzes/${quiz.id}/take`);
+	};
 </script>
 
 <div class="flex flex-col gap-6">
@@ -18,7 +25,7 @@
 		<div class="mb-4 flex items-center justify-between">
 			<h1 class="text-3xl font-bold">{quiz.title}</h1>
 			<div class="flex gap-2">
-				<button class="btn btn-primary">
+				<button class="btn btn-primary" onclick={takeQuiz}>
 					<Icon icon="mdi:pencil-outline" class="mr-2 h-5 w-5" />
 					Take Quiz
 				</button>
@@ -66,9 +73,9 @@
 	</div>
 
 	<!-- Quiz information section -->
-	<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
 		<!-- Details -->
-		<div class="card bg-base-200 col-span-2">
+		<div class="card bg-base-200 lg:col-span-1 xl:col-span-2">
 			<div class="card-body">
 				<h2 class="card-title mb-2 flex items-center">
 					<Icon icon="mdi:information-outline" class="mr-2 h-6 w-6" />
@@ -91,7 +98,7 @@
 						<span class="text-sm font-medium opacity-70">Created on</span>
 						<div class="flex items-center gap-2">
 							<Icon icon="mdi:calendar" class="h-5 w-5 opacity-70" />
-							<span>{creationDate}</span>
+							<time datetime={quiz.createdAt.toISOString()}>{creationDate}</time>
 						</div>
 					</div>
 
@@ -130,27 +137,27 @@
 				<div class="divider my-1"></div>
 
 				{#if quiz.questions && quiz.questions.length > 0}
-					<ul class="menu bg-base-100 rounded-box w-full">
-						{#each quiz.questions.slice(0, 5) as question, i}
-							<li class="mb-1">
-								<a href="/quizzes/{quiz.id}/questions/{i + 1}" class="flex items-center">
+					<div class="bg-base-100 rounded-box w-full p-4">
+						<ul class="list">
+							{#each quiz.questions.slice(0, 5) as question, i}
+								<li class="list-row py-2">
 									<div class="badge badge-sm mr-2">{i + 1}</div>
-									<span class="flex-1 truncate"
+									<span class="break-words"
 										>{question.text?.substring(0, 40) || `Question ${i + 1}`}{question.text
 											?.length > 40
 											? '...'
 											: ''}</span
 									>
-								</a>
-							</li>
-						{/each}
+								</li>
+							{/each}
+						</ul>
 
 						{#if quiz.questions.length > 5}
-							<li class="pt-2 text-center text-sm opacity-70">
+							<div class="mt-2 text-center text-sm opacity-70">
 								+ {quiz.questions.length - 5} more questions
-							</li>
+							</div>
 						{/if}
-					</ul>
+					</div>
 				{:else}
 					<div class="flex flex-col items-center justify-center py-8 opacity-60">
 						<Icon icon="mdi:help-circle-outline" class="mb-2 h-12 w-12" />
@@ -159,7 +166,7 @@
 				{/if}
 
 				<div class="card-actions mt-2">
-					<button class="btn btn-primary btn-sm btn-block">
+					<button class="btn btn-primary btn-sm btn-block" onclick={takeQuiz}>
 						<Icon icon="mdi:pencil-outline" class="mr-2 h-5 w-5" />
 						Start Quiz
 					</button>
@@ -179,47 +186,19 @@
 			<div class="divider my-1"></div>
 
 			{#if userAttempts && userAttempts.length > 0}
-				<div class="overflow-x-auto">
-					<table class="table-zebra table">
-						<thead>
-							<tr>
-								<th>Attempt</th>
-								<th>Date</th>
-								<th>Time Taken</th>
-								<th>Status</th>
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each userAttempts as attempt, i}
-								<tr>
-									<td>#{i + 1}</td>
-									<td>{new Date(attempt.startedAt).toLocaleDateString()}</td>
-									<td
-										>{attempt.completedAt
-											? new Date(attempt.completedAt).toLocaleDateString()
-											: 'N/A'}</td
-									>
-									<td>
-										<div class="badge {attempt.completedAt ? 'badge-success' : 'badge-warning'}">
-											{attempt.completedAt ? 'Completed' : 'In Progress'}
-										</div>
-									</td>
-									<td>
-										<a href="/quizzes/{quiz.id}/attempts/{attempt.id}" class="btn btn-xs btn-ghost">
-											View
-										</a>
-									</td>
-								</tr>
-							{/each}
-						</tbody>
-					</table>
+				<div class="hidden overflow-x-auto sm:flex">
+					<AttemptTable {userAttempts} {quiz} />
+				</div>
+				<div class="flex flex-col items-center justify-center gap-2 sm:hidden">
+					{#each userAttempts as attempt}
+						<AttemptCard {attempt} />
+					{/each}
 				</div>
 			{:else}
-				<div class="flex flex-col items-center justify-center py-8 opacity-60">
-					<Icon icon="mdi:information-outline" class="mb-2 h-12 w-12" />
-					<p>You haven't attempted this quiz yet</p>
-					<button class="btn btn-primary btn-sm mt-4">
+				<div class="flex flex-col items-center justify-center py-8">
+					<Icon icon="mdi:information-outline" class="mb-2 h-12 w-12 opacity-60" />
+					<p class="opacity-60">You haven't attempted this quiz yet</p>
+					<button class="btn btn-primary btn-sm mt-4" onclick={takeQuiz}>
 						<Icon icon="mdi:pencil-outline" class="mr-2 h-5 w-5" />
 						Take Quiz Now
 					</button>

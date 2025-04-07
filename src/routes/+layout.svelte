@@ -31,7 +31,7 @@
 	});
 </script>
 
-<div class="bg-base-100 min-h-screen">
+<div class="flex min-h-screen flex-col">
 	<header class="navbar bg-base-200 shadow-lg">
 		<div class="navbar-start">
 			<a href="/" class="btn btn-ghost text-xl">QuizMaster</a>
@@ -141,37 +141,27 @@
 			{/if}
 		</div>
 	{/if}
-	<main class="container mx-auto px-4 py-8">
+	<main class="container mx-auto flex-1 px-4 py-8">
 		<span class="text-sm font-medium"></span>
 
 		{@render children()}
 	</main>
-</div>
-<footer class="footer footer-center bg-base-200 text-base-content p-10">
-	<div class="grid grid-flow-col gap-4">
-		<a href="/about" class="link link-hover">About</a>
-		<a href="/contact" class="link link-hover">Contact</a>
-		<a href="/terms-of-service" class="link link-hover">Terms of Service</a>
-		<a href="/privacy-policy" class="link link-hover">Privacy Policy</a>
-	</div>
-	<div>
-		<div class="grid grid-flow-col gap-4">
-			<a aria-label="X" href="https://twitter.com/quizmaster" class="btn btn-ghost btn-square">
-				<Icon icon="fa-brands:twitter" class="w-12" />
-			</a>
-			<a aria-label="GitHub" href="https://github.com/quizmaster" class="btn btn-ghost btn-square">
-				<Icon icon="fa-brands:github" class="w-12" />
-			</a>
 
-			<a aria-label="Discord" href="https://discord.gg/quizmaster" class="btn btn-ghost btn-square">
-				<Icon icon="fa-brands:discord" class="w-12" />
-			</a>
+	<footer class="footer footer-center bg-base-200 text-base-content p-4 md:p-8">
+		<div class="flex flex-col gap-4 sm:grid sm:grid-flow-col">
+			<a href="/about" class="link link-hover">About</a>
+			<a href="/contact" class="link link-hover">Contact</a>
+			<a href="/terms-of-service" class="link link-hover">Terms of Service</a>
+			<a href="/privacy-policy" class="link link-hover">Privacy Policy</a>
 		</div>
-	</div>
-	<div>
-		<p>Copyright © {new Date().getFullYear()} - QuizMaster. All rights reserved.</p>
-	</div>
-</footer>
+
+		<div>
+			<p class="text-center text-sm opacity-80 md:text-base">
+				Copyright © {new Date().getFullYear()} - QuizMaster. All rights reserved.
+			</p>
+		</div>
+	</footer>
+</div>
 
 <!-- Add Toaster component at the end of the page -->
 <Toaster max={3} />

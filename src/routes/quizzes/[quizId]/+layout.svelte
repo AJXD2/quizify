@@ -1,9 +1,10 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onDestroy, type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
 	import Profile from '$lib/components/Profile.svelte';
+	import { onNavigate } from '$app/navigation';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { quiz } = data;
@@ -13,7 +14,11 @@
 	function toggleSidebar() {
 		isSidebarOpen = !isSidebarOpen;
 	}
-	console.log($page.url.pathname === `/quizzes/${quiz.id}`);
+
+	// Close sidebar when route changes
+	onNavigate(() => {
+		isSidebarOpen = false;
+	});
 </script>
 
 <div class="drawer lg:drawer-open bg-base-100 min-h-screen">
@@ -40,7 +45,7 @@
 	</div>
 
 	<!-- Sidebar -->
-	<div class="drawer-side z-20">
+	<aside class="drawer-side z-20">
 		<label for="quiz-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
 		<div class="bg-base-200 text-base-content flex h-full w-64 flex-col">
 			<!-- Quiz navigation -->
@@ -114,5 +119,5 @@
 				</a>
 			</div>
 		</div>
-	</div>
+	</aside>
 </div>
