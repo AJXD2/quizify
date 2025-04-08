@@ -1,35 +1,16 @@
-import { db } from '$lib/server/db';
+import { quizService } from '$lib/server/db/services';
 import type { PageServerLoad } from './$types';
-import { count, desc } from 'drizzle-orm';
-import { quiz } from '$lib/server/db/schema';
-import type { QuizWithProfile } from '$lib';
 
 export const load = (async ({ url }) => {
 	let page = parseInt(url.searchParams.get('page') || '1');
 	if (isNaN(page) || page < 1) {
 		page = 1;
 	}
-	const quizzes = await db.query.quiz.findMany({
-		orderBy: [desc(quiz.createdAt)],
-		with: {
-			creator: {
-				columns: {
-					username: true,
-					image: true
-				}
-			}
-		},
-		limit: 20,
-		offset: (page - 1) * 20,
-		columns: {
-			creatorId: false
-		}
-	});
-	const totalQuizzes = await db.select({ count: count() }).from(quiz);
-	const totalPages = Math.ceil(totalQuizzes[0].count / 20);
+
+	const { quizzes, totalPages } = await quizService.listQuizzes(page);
 
 	return {
-		quizzes: quizzes as QuizWithProfile[],
+		quizzes,
 		page,
 		totalPages
 	};

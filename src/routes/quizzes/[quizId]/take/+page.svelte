@@ -102,15 +102,18 @@
 	};
 
 	const handleEndAttempt: SubmitFunction = () => {
-		return ({ update, result, formData }) => {
+		return async ({ update, result }) => {
 			if (!attempt) {
 				toasts.error({ title: 'Error', message: 'Attempt not found' });
 				return;
 			}
 			isSubmitting = true;
-			update();
-			if (result.type === 'success') {
-				goto(`/quizzes/${quiz.id}/results/${attempt.id}`);
+
+			await update();
+
+			if (result.type === 'success' && result.data) {
+				const completedAttempt = result.data.attempt;
+				await goto(`/quizzes/${quiz.id}/attempts/${completedAttempt.id}`);
 			} else if (result.type === 'failure') {
 				toasts.error({
 					title: 'Error while ending attempt',

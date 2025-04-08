@@ -1,51 +1,44 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db } from '$lib/server/db';
-import { answer, attempt, attemptAnswer, question } from '$lib/server/db/schema';
-import { getSessionOrRedirect } from '$lib/server/utils';
-import { eq, and, isNull } from 'drizzle-orm';
+import { getSession, getSessionOrRedirect } from '$lib/server/utils';
+import { attemptService, quizService } from '$lib/server/db/services';
 
 export const load = (async ({ params, request }) => {
 	const session = await getSessionOrRedirect(request, request.url);
 
-	const activeAttempt = await db.query.attempt.findFirst({
-		where: and(
-			eq(attempt.quizId, params.quizId),
-			eq(attempt.userId, session.user.id),
-			isNull(attempt.completedAt)
-		)
-	});
+	const activeAttempt = await attemptService.getActiveAttempt(session.user.id, params.quizId);
+
 	return {
-		activeAttempt: activeAttempt
+		activeAttempt
 	};
 }) satisfies PageServerLoad;
 
 export const actions = {
 	startAttempt: async ({ request, params }) => {
-		const session = await getSessionOrRedirect(request, request.url);
-		const quizId = params.quizId;
-
-		if (!quizId || !session) {
-			return fail(400, { success: false, message: 'Quiz ID and user ID are required' });
+		const session = await getSession(request);
+		if (!session) {
+			return fail(401, { success: false, message: 'Unauthorized' });
 		}
 
-		const newAttempt = await db
-			.insert(attempt)
-			.values({
-				quizId: quizId,
-				userId: session.user.id,
-				startedAt: new Date()
-			})
-			.returning();
+		const quizId = params.quizId;
+
+		if (!quizId) {
+			return fail(400, { success: false, message: 'Quiz ID is required' });
+		}
+
+		const newAttempt = await attemptService.createAttempt(session.user.id, quizId);
 
 		return {
 			success: true,
-			attempt: newAttempt[0]
+			attempt: newAttempt
 		};
 	},
 
 	submitAnswer: async ({ request }) => {
-		await getSessionOrRedirect(request, request.url);
+		const session = await getSession(request);
+		if (!session) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
 
 		const formData = await request.formData();
 		const attemptId = formData.get('attemptId');
@@ -59,67 +52,32 @@ export const actions = {
 			});
 		}
 
-		const currentAttempt = await db.query.attempt.findFirst({
-			where: eq(attempt.id, attemptId as string)
-		});
+		const currentAttempt = await quizService.findAttemptWithAnswers(
+			attemptId as string,
+			session.user.id
+		);
 
 		if (!currentAttempt) {
 			return fail(400, { success: false, message: 'Attempt not found' });
 		}
 
-		const currentQuestion = await db.query.question.findFirst({
-			where: eq(question.id, questionId as string)
-		});
+		const answer = await attemptService.submitAnswer(
+			attemptId as string,
+			questionId as string,
+			answerId as string
+		);
 
-		if (!currentQuestion) {
-			return fail(400, { success: false, message: 'Question not found' });
-		}
-
-		const currentAnswer = await db.query.answer.findFirst({
-			where: eq(answer.id, answerId as string)
-		});
-
-		if (!currentAnswer) {
-			return fail(400, { success: false, message: 'Answer not found' });
-		}
-
-		const isCorrect = currentAnswer.isCorrect;
-
-		const previousAnswer = await db.query.attemptAnswer.findFirst({
-			where: and(
-				eq(attemptAnswer.attemptId, attemptId as string),
-				eq(attemptAnswer.questionId, questionId as string)
-			)
-		});
-		let newAttemptAnswer;
-		if (previousAnswer) {
-			newAttemptAnswer = await db
-				.update(attemptAnswer)
-				.set({
-					answerId: answerId as string,
-					isCorrect: isCorrect
-				})
-				.where(eq(attemptAnswer.id, previousAnswer.id))
-				.returning();
-		} else {
-			newAttemptAnswer = await db
-				.insert(attemptAnswer)
-				.values({
-					attemptId: attemptId as string,
-					questionId: questionId as string,
-					answerId: answerId as string,
-					isCorrect: isCorrect
-				})
-				.returning();
-		}
 		return {
 			success: true,
-			attemptAnswer: newAttemptAnswer[0]
+			attemptAnswer: answer
 		};
 	},
 
 	endAttempt: async ({ request }) => {
-		await getSessionOrRedirect(request, request.url);
+		const session = await getSession(request);
+		if (!session) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
 
 		const formData = await request.formData();
 		const attemptId = formData.get('attemptId');
@@ -128,21 +86,15 @@ export const actions = {
 			return fail(400, { success: false, message: 'Attempt ID is required' });
 		}
 
-		const updatedAttempt = await db
-			.update(attempt)
-			.set({
-				completedAt: new Date()
-			})
-			.where(eq(attempt.id, attemptId as string))
-			.returning();
+		const updatedAttempt = await attemptService.completeAttempt(attemptId as string);
 
-		if (!updatedAttempt || updatedAttempt.length === 0) {
+		if (!updatedAttempt) {
 			return fail(400, { success: false, message: 'Failed to end attempt' });
 		}
 
 		return {
 			success: true,
-			attempt: updatedAttempt[0]
+			attempt: updatedAttempt
 		};
 	}
 } satisfies Actions;

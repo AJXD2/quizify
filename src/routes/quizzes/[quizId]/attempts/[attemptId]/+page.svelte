@@ -83,7 +83,6 @@
 				<div class="flex flex-col gap-6">
 					{#each quiz.questions as question, index}
 						{@const attemptAnswer = attempt.answers.find((a) => a.questionId === question.id)}
-						{@const selectedAnswer = question.answers.find((a) => a.id === attemptAnswer?.answerId)}
 						{@const correctAnswer = question.answers.find((a) => a.isCorrect)}
 						<div class="card bg-base-100 shadow-lg">
 							<div class="card-body">
