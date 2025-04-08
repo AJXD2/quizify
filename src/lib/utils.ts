@@ -52,3 +52,11 @@ export function calculateTimeSpent(startTime: Date | null, endTime: Date | null)
 		return `${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
 	}
 }
+
+/**
+ * Get the current tailwind screen size
+ */
+export function getScreenSize(): string {
+	const width = window.innerWidth;
+	return width < 640 ? 'sm' : width < 768 ? 'md' : width < 1024 ? 'lg' : 'xl';
+}
