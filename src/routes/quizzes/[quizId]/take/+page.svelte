@@ -5,19 +5,20 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import { goto } from '$app/navigation';
 	import { toasts } from '$lib/stores/toast';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
 
-	const { data }: PageProps = $props();
-	const { quiz } = data;
+	const { data }: { data: PageData } = $props();
+	const { quiz, userAttempts } = data;
 	// Flow:
 	// 1. Send form action `startAttempt` to create an attempt
 	// 2. Store the attempt here and show questions.
 	// 3. For every question, send form action `submitAnswer` to store the answer.
 	// 4. Once completed, send form action `endAttempt` to store the attempt.
 	// 5. Redirect to results page.
-
-	let attempt = $state<Attempt | null>(null);
+	let attempt = $state<Attempt | null>(
+		userAttempts.find((attempt) => attempt.completedAt === null) ?? null
+	);
 	let currentQuestionIndex = $state<number>(0);
 	let isSubmitting = $state<boolean>(false);
 	let timeLeft = $state<number | null>(null);
@@ -30,7 +31,12 @@
 		}
 		return false;
 	});
-
+	onMount(() => {
+		if (attempt) {
+			toasts.info({ title: 'Welcome back!', message: 'We have resumed your attempt.' });
+			startTimer();
+		}
+	});
 	function startTimer() {
 		if (!quiz.timeLimit) return;
 		timeLeft = quiz.timeLimit * 60; // Convert minutes to seconds
@@ -155,7 +161,7 @@
 				{#each quiz.questions as question, index}
 					<button
 						class="step cursor-pointer"
-						class:step-primary={index <= currentQuestionIndex}
+						class:step-accent={index <= currentQuestionIndex}
 						class:step-warning={index < currentQuestionIndex && !answers[question.id]}
 						class:step-success={index < currentQuestionIndex && answers[question.id]?.isCorrect}
 						class:step-error={index < currentQuestionIndex && !answers[question.id]?.isCorrect}
@@ -177,6 +183,10 @@
 					<input type="hidden" name="questionId" value={quiz.questions[currentQuestionIndex].id} />
 
 					<div class="space-y-2 sm:space-y-3">
+						<span class="text-lg font-bold">
+							{quiz.questions[currentQuestionIndex].text}
+						</span>
+						<div class="divider"></div>
 						{#each quiz.questions[currentQuestionIndex].answers as answer}
 							<div class="form-control">
 								<label

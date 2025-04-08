@@ -40,14 +40,15 @@ export function calculateTimeSpent(startTime: Date | null, endTime: Date | null)
 	if (!startTime || !endTime) return 'N/A';
 
 	const diffMs = endTime.getTime() - startTime.getTime();
-	const diffMins = Math.floor(diffMs / 60000);
-	const diffSecs = Math.floor((diffMs % 60000) / 1000);
+	const hours = Math.floor(diffMs / 3600000);
+	const minutes = Math.floor((diffMs % 3600000) / 60000);
+	const seconds = Math.floor((diffMs % 60000) / 1000);
 
-	if (diffMins < 1) {
-		return `${diffSecs} seconds`;
-	} else if (diffMins === 1) {
-		return `1 minute ${diffSecs} seconds`;
+	if (hours > 0) {
+		return `${hours} ${hours === 1 ? 'hour' : 'hours'} ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
+	} else if (minutes > 0) {
+		return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
 	} else {
-		return `${diffMins} minutes ${diffSecs} seconds`;
+		return `${seconds} ${seconds === 1 ? 'second' : 'seconds'}`;
 	}
 }

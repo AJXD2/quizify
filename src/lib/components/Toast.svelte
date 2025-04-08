@@ -18,7 +18,7 @@
 </script>
 
 <div
-	class="alert alert-vertical sm:alert-horizontal"
+	class="alert alert-horizontal w-full"
 	role="alert"
 	class:alert-info={toast.type === 'info'}
 	class:alert-success={toast.type === 'success'}

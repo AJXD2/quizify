@@ -3,10 +3,21 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { answer, attempt, attemptAnswer, question } from '$lib/server/db/schema';
 import { getSessionOrRedirect } from '$lib/server/utils';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 
-export const load = (async () => {
-	return {};
+export const load = (async ({ params, request }) => {
+	const session = await getSessionOrRedirect(request, request.url);
+
+	const activeAttempt = await db.query.attempt.findFirst({
+		where: and(
+			eq(attempt.quizId, params.quizId),
+			eq(attempt.userId, session.user.id),
+			isNull(attempt.completedAt)
+		)
+	});
+	return {
+		activeAttempt: activeAttempt
+	};
 }) satisfies PageServerLoad;
 
 export const actions = {

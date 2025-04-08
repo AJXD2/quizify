@@ -5,17 +5,37 @@
 	import AttemptCard from '$lib/components/AttemptCard.svelte';
 	import { goto } from '$app/navigation';
 	import AttemptTable from '$lib/components/AttemptTable.svelte';
+	import { toasts } from '$lib/stores/toast';
 
 	let { data }: { data: PageData } = $props();
-	const { quiz, userAttempts } = data;
+	const { quiz, userAttempts: allAttempts } = data;
 
 	// Calculate statistics - adjust based on actual data model
 	const totalQuestions = quiz.questions?.length || 0;
 	const estimatedTime = quiz.timeLimit || `${Math.max(totalQuestions * 2, 10)} min`;
 	const creationDate = new Date(quiz.createdAt).toLocaleDateString();
 
+	let userAttempts = $state(allAttempts);
 	const takeQuiz = () => {
 		goto(`/quizzes/${quiz.id}/take`);
+	};
+
+	const forfeitAttempt = async (attemptId: string) => {
+		// Use /?forfeitAttempt action
+		const formData = new FormData();
+		formData.set('attemptId', attemptId);
+		const response = await fetch(`?/forfeitAttempt`, {
+			method: 'POST',
+			body: formData
+		});
+		if (response.ok) {
+			toasts.success({
+				title: 'Attempt forfeited',
+				message: 'Your attempt has been forfeited',
+				icon: 'fluent-emoji:saluting-face'
+			});
+		}
+		userAttempts = userAttempts.filter((attempt) => attempt.id !== attemptId);
 	};
 </script>
 
@@ -186,16 +206,13 @@
 			<div class="divider my-1"></div>
 
 			{#if userAttempts && userAttempts.length > 0}
-				<div class="hidden overflow-x-auto sm:flex">
-					<AttemptTable {userAttempts} {quiz} />
-				</div>
-				<div class="flex flex-col items-center justify-center gap-2 sm:hidden">
+				<div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
 					{#each userAttempts as attempt}
-						<AttemptCard {attempt} />
+						<AttemptCard {attempt} onForfeit={() => forfeitAttempt(attempt.id)} />
 					{/each}
 				</div>
 			{:else}
-				<div class="flex flex-col items-center justify-center py-8">
+				<div class="overflow-hi flex flex-col items-center justify-center py-8">
 					<Icon icon="mdi:information-outline" class="mb-2 h-12 w-12 opacity-60" />
 					<p class="opacity-60">You haven't attempted this quiz yet</p>
 					<button class="btn btn-primary btn-sm mt-4" onclick={takeQuiz}>
