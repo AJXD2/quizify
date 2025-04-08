@@ -1,27 +1,13 @@
 import { json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { user } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { userService } from '$lib/server/db/services';
 
 export async function GET({ url }) {
 	const username = url.searchParams.get('username');
 
 	if (!username) {
-		return json({ available: false, error: 'No username provided' }, { status: 400 });
+		return json({ available: false, error: 'Username is required' }, { status: 400 });
 	}
 
-	if (username.length < 3) {
-		return json({ available: false, error: 'Username must be at least 3 characters' });
-	}
-
-	try {
-		const existingUser = await db.query.user.findFirst({
-			where: eq(user.username, username)
-		});
-
-		return json({ available: !existingUser });
-	} catch (error) {
-		console.error('Error checking username:', error);
-		return json({ available: false, error: 'Error checking username' }, { status: 500 });
-	}
+	const result = await userService.isUsernameAvailable(username);
+	return json(result);
 }
