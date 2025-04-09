@@ -6,7 +6,7 @@ import { and, eq } from 'drizzle-orm';
 import { attempt, quiz } from '$lib/server/db/schema';
 
 export const load: PageServerLoad = async ({ params, request }) => {
-	const session = await getSessionOrRedirect(request, request.url);
+	const session = await getSessionOrRedirect(request, `/quizzes/${params.quizId}/attempts`);
 
 	const quizData = await db.query.quiz.findFirst({
 		where: eq(quiz.id, params.quizId),

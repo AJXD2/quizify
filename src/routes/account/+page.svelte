@@ -14,14 +14,17 @@
 	let successMessage = $state('');
 	let errorMessage = $state('');
 	let isLoading = $state(false);
+	let displayUsername = $state('');
 	// Track original and current values
 	let originalUsername = $state('');
+	let originalDisplayUsername = $state('');
 	let originalName = $state('');
 	let originalEmail = $state('');
 	let hasUnsavedChanges = $derived(
 		username !== originalUsername ||
 			name !== originalName ||
 			email !== originalEmail ||
+			displayUsername !== originalDisplayUsername ||
 			(currentPassword && newPassword && confirmPassword)
 	);
 
@@ -37,11 +40,12 @@
 			username = session.data.user.username || '';
 			email = session.data.user.email || '';
 			name = session.data.user.name || '';
-
+			displayUsername = session.data.user.displayUsername || '';
 			// Store original values
 			originalUsername = username;
 			originalEmail = email;
 			originalName = name;
+			originalDisplayUsername = displayUsername;
 		}
 		const accounts = await authClient.listAccounts();
 		hasCredentialAccount =
@@ -53,6 +57,7 @@
 		username = originalUsername;
 		email = originalEmail;
 		name = originalName;
+		displayUsername = originalDisplayUsername;
 		currentPassword = '';
 		newPassword = '';
 		confirmPassword = '';
@@ -100,6 +105,17 @@
 				}
 
 				originalUsername = username;
+			}
+
+			if (displayUsername !== originalDisplayUsername) {
+				const userData = await authClient.updateUser({
+					displayUsername
+				});
+
+				if (userData.error?.message) {
+					errorMessage = userData.error.message;
+					return;
+				}
 			}
 
 			// Update name and email if changed
@@ -259,21 +275,35 @@
 						</div>
 					{/if}
 
-					<div class="form-control w-full max-w-md">
-						<label for="username" class="label">
-							<span class="label-text">Username</span>
-						</label>
-						<input
-							id="username"
-							type="text"
-							class="input input-bordered w-full"
-							placeholder="Enter username"
-							bind:value={username}
-							minlength="3"
-						/>
-						<label for="username" class="label">
-							<span class="label-text-alt">Must be at least 3 characters</span>
-						</label>
+					<div class="grid gap-4 md:grid-cols-2">
+						<div class="form-control w-full max-w-md">
+							<label for="username" class="label">
+								<span class="label-text">Username</span>
+							</label>
+							<input
+								id="username"
+								type="text"
+								class="input input-bordered w-full"
+								placeholder="Enter username"
+								bind:value={username}
+								minlength="3"
+							/>
+							<label for="username" class="label">
+								<span class="label-text-alt">Must be at least 3 characters</span>
+							</label>
+						</div>
+						<div class="form-control w-full max-w-md">
+							<label for="displayUsername" class="label">
+								<span class="label-text">Display Username</span>
+							</label>
+							<input
+								id="displayUsername"
+								type="text"
+								class="input input-bordered w-full"
+								placeholder="Enter display username"
+								bind:value={displayUsername}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>

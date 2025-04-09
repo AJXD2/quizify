@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
-	const { userProfile } = data;
+	const { userProfile, user } = data;
 	let currentPath = $state('');
 	let username = $state('');
 
@@ -17,21 +17,24 @@
 <div class="container mx-auto px-4 py-6">
 	<div class="card bg-base-200">
 		<div class="card-body p-6">
-			<div class="flex items-center gap-4">
-				<div class="avatar">
-					<div class="w-16 rounded-full">
-						<img src={userProfile.image} alt={userProfile.username} />
+			<div class="flex items-center justify-between gap-6">
+				<div class="flex items-center gap-4">
+					<div class="avatar flex-none">
+						<div class="w-16 rounded-full">
+							<img src={userProfile.image} alt={userProfile.username} />
+						</div>
+					</div>
+					<div class="flex-auto">
+						<h1 class="text-2xl font-bold">
+							{userProfile.displayUsername}
+						</h1>
+						<p class="text-base-content/60 text-sm">@{userProfile.username}</p>
 					</div>
 				</div>
-				<div class="flex-grow">
-					<h1 class="text-2xl font-bold">
-						{userProfile.displayUsername}
-					</h1>
-					<p class="text-sm text-gray-500">@{userProfile.username}</p>
-				</div>
-				<div class="stat px-2">
-					<div class="stat-title">Quizzes</div>
-					<div class="stat-value text-xl">{userProfile.quizzes.length}</div>
+				<div class="flex items-center gap-4">
+					{#if userProfile.id === user?.id}
+						<a href="/account" class="btn btn-primary"> Edit Profile </a>
+					{/if}
 				</div>
 			</div>
 		</div>

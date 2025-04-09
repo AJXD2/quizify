@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 	const session = authClient.useSession();
@@ -103,7 +104,7 @@
 						</li>
 						<li>
 							<button
-								onclick={() => authClient.signOut().then(() => goto('/'))}
+								onclick={() => authClient.signOut().then(() => goto(page.url.pathname))}
 								class="text-error flex items-center gap-3"
 							>
 								<Icon icon="mdi:logout" class="h-5 w-5" />
