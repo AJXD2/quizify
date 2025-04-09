@@ -1,25 +1,64 @@
 import type { LayoutServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
-import { auth } from '$lib/auth';
-import { quizService } from '$lib/server/db/services';
+import { db } from '$lib/server/db';
+import { quiz, attempt } from '$lib/server/db/schema';
+import { and, desc, eq } from 'drizzle-orm';
 
-export const load = (async ({ params, request }) => {
-	const session = await auth.api.getSession(request);
+export const load = (async ({ params, locals }) => {
+	const { user } = locals;
+	const quizId = params.quizId;
 
-	const quiz = await quizService.findQuizWithAttemptsAndQuestions(params.quizId).catch(() => {
-		throw error(404, 'Quiz not found');
-	});
+	const quizData = await db.query.quiz
+		.findFirst({
+			where: eq(quiz.id, quizId),
+			with: {
+				questions: {
+					with: { answers: true }
+				},
+				creator: {
+					columns: {
+						id: true,
+						image: true,
+						username: true,
+						displayUsername: true
+					}
+				},
+				attempts: true
+			}
+		})
+		.catch(() => {
+			throw error(404, 'Quiz not found');
+		});
 
-	if (!quiz) {
+	if (!quizData) {
 		throw error(404, 'Quiz not found');
 	}
 
-	const userAttempts = session?.user.id
-		? await quizService.findUserAttempts(params.quizId, session.user.id)
+	const userAttempts = user?.id
+		? await db.query.attempt.findMany({
+				where: and(eq(attempt.quizId, quizId), eq(attempt.userId, user.id)),
+				with: {
+					answers: {
+						with: {
+							question: true,
+							answer: true
+						}
+					},
+					user: {
+						columns: {
+							id: true,
+							image: true,
+							username: true,
+							displayUsername: true
+						}
+					}
+				},
+				orderBy: [desc(attempt.startedAt)]
+			})
 		: [];
 
 	return {
-		quiz,
+		quiz: quizData,
 		userAttempts
 	};
 }) satisfies LayoutServerLoad;

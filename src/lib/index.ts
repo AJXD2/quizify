@@ -9,7 +9,7 @@ import {
 	leaderboard
 } from './server/db/schema';
 
-// For SELECT queries (what you get back from the database)
+// For SELECT queries - base types from the database
 export type Quiz = InferSelectModel<typeof quiz>;
 export type User = InferSelectModel<typeof user>;
 export type Question = InferSelectModel<typeof question>;
@@ -18,19 +18,37 @@ export type Attempt = InferSelectModel<typeof attempt>;
 export type AttemptAnswer = InferSelectModel<typeof attemptAnswer>;
 export type Leaderboard = InferSelectModel<typeof leaderboard>;
 
-// For a quiz with its creator relation included
+// Relation types - using Drizzle's type system
 export type QuizWithCreator = Quiz & {
-	creator: User;
+	creator: Profile;
 };
 
-// For a quiz with creator profile info
-export type Profile = Pick<User, 'username' | 'image'>;
-export type QuizWithProfile = Omit<
-	Quiz & {
-		creator: Profile;
-	},
-	'creatorId'
->;
+export type QuizWithQuestions = Quiz & {
+	questions: Question[];
+};
+
+export type QuizWithQuestionsAndAnswers = Quiz & {
+	questions: (Question & {
+		answers: Answer[];
+	})[];
+};
+
+export type QuizWithCreatorAndQuestions = Quiz & {
+	creator: Profile;
+	questions: Question[];
+};
+
+export type CompleteAttempt = Attempt & {
+	answers: (AttemptAnswer & {
+		question: Question;
+		answer: Answer;
+	})[];
+	user: Profile;
+	quiz: QuizWithQuestionsAndAnswers;
+};
+
+// Profile type
+export type Profile = Pick<User, 'id' | 'username' | 'image' | 'displayUsername'>;
 
 // Type for pagination options
 export type PaginationOptions = {
@@ -38,5 +56,10 @@ export type PaginationOptions = {
 	limit?: number;
 };
 
-// Utility type for relationships
-export type WithRelations<T, R extends Record<string, unknown>> = T & R;
+// Pagination result type
+export type PaginatedResult<T> = {
+	items: T[];
+	page: number;
+	totalPages: number;
+	totalCount: number;
+};
