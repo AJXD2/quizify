@@ -36,7 +36,6 @@
 		isLoading = true;
 		const session = await authClient.getSession();
 		if (session.data?.user) {
-			console.log(session.data.user);
 			username = session.data.user.username || '';
 			email = session.data.user.email || '';
 			name = session.data.user.name || '';

@@ -12,7 +12,6 @@
 	let remember = $state(false);
 	let error = $state('');
 	let redirectTo = $state(page.url.searchParams.get('redirectTo') || '/');
-	console.log(redirectTo);
 	const handleSubmit = async () => {
 		const data = await authClient.signIn.email({
 			email,

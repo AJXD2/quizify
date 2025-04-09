@@ -15,6 +15,5 @@ export async function sendEmail(to: string, subject: string, html: string) {
 		console.error(error);
 		throw new Error('Failed to send email');
 	}
-	console.log(data);
 	return data;
 }
