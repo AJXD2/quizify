@@ -88,13 +88,13 @@
 					</li>
 					<li>
 						<a
-							href="/quizzes/{quiz.id}/results"
-							class="flex items-center gap-3 {$page.url.pathname.includes('/results')
+							href="/quizzes/{quiz.id}/leaderboard"
+							class="flex items-center gap-3 {$page.url.pathname.includes('/leaderboard')
 								? 'bg-base-content/15'
 								: ''}"
 						>
 							<Icon icon="mdi:poll" class="h-5 w-5" />
-							<span>Results</span>
+							<span>Leaderboard</span>
 						</a>
 					</li>
 					<li>
