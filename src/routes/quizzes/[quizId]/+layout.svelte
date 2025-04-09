@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, type Snippet } from 'svelte';
+	import { type Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';

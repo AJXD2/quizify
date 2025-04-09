@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { QuizWithProfile } from '$lib';
-	const { quiz }: { quiz: QuizWithProfile } = $props();
+	import type { QuizWithCreator } from '$lib';
+	const { quiz }: { quiz: QuizWithCreator } = $props();
 </script>
 
 <div
@@ -21,7 +21,7 @@
 
 		<div class=" mt-4 flex items-center gap-2 text-sm text-gray-500">
 			<a
-				href={`/users/${quiz.creator.username}`}
+				href={`/user/${quiz.creator.username}`}
 				class="link hover:text-primary z-[1] flex items-center gap-2 transition-colors"
 			>
 				{#if quiz.creator.image}
