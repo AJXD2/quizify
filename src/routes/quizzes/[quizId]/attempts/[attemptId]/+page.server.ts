@@ -1,27 +1,47 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { getSessionOrRedirect } from '$lib/server/utils';
-import { quizService } from '$lib/server/db/services';
+import { db } from '$lib/server/db';
+import { eq } from 'drizzle-orm';
+import { attempt, quiz } from '$lib/server/db/schema';
 
-export const load: PageServerLoad = async ({ params, request }) => {
-	const session = await getSessionOrRedirect(request, request.url);
-
-	const quiz = await quizService.findQuizWithQuestions(params.quizId);
+export const load: PageServerLoad = async ({ params }) => {
+	const quizData = await db.query.quiz.findFirst({
+		where: eq(quiz.id, params.quizId),
+		with: {
+			questions: {
+				with: {
+					answers: true
+				}
+			},
+			attempts: true,
+			creator: {
+				columns: {
+					id: true,
+					username: true,
+					image: true,
+					displayUsername: true
+				}
+			}
+		}
+	});
 	if (!quiz) {
 		throw error(404, 'Quiz not found');
 	}
 
-	const attempt = await quizService
-		.findAttemptWithAnswers(params.attemptId, session.user.id)
-		.catch(() => {
-			throw error(404, 'Attempt not found');
-		});
-	if (!attempt) {
+	const attemptData = await db.query.attempt.findFirst({
+		where: eq(attempt.id, params.attemptId),
+		with: {
+			answers: true,
+			user: true,
+			quiz: true
+		}
+	});
+	if (!attemptData) {
 		throw error(404, 'Attempt not found');
 	}
 
 	return {
-		quiz,
-		attempt
+		quiz: quizData,
+		attempt: attemptData
 	};
 };

@@ -1,15 +1,17 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
-import { attemptService } from '$lib/server/db/services';
-import { getSession } from '$lib/server/utils';
+import { db } from '$lib/server/db';
+import { and, eq } from 'drizzle-orm';
+import { attempt } from '$lib/server/db/schema';
+
 export const load = (async () => {
 	return {};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	forfeitAttempt: async ({ request }) => {
-		const session = await getSession(request);
-		if (!session) {
+	forfeitAttempt: async ({ request, locals }) => {
+		const { session, user } = locals;
+		if (!session || !user) {
 			return fail(401, { message: 'Unauthorized' });
 		}
 
@@ -20,7 +22,9 @@ export const actions: Actions = {
 			return fail(400, { message: 'Invalid attempt ID' });
 		}
 
-		const result = await attemptService.forfeitAttempt(attemptId, session.user.id);
+		const result = await db
+			.delete(attempt)
+			.where(and(eq(attempt.id, attemptId), eq(attempt.userId, user.id)));
 
 		if (!result) {
 			return fail(400, { message: 'Failed to forfeit attempt' });
