@@ -3,5 +3,6 @@ import type { Auth } from '.';
 import { inferAdditionalFields, twoFactorClient, usernameClient } from 'better-auth/client/plugins';
 
 export const authClient = createAuthClient({
-	plugins: [inferAdditionalFields<Auth>(), twoFactorClient(), usernameClient()]
+	plugins: [inferAdditionalFields<Auth>(), twoFactorClient(), usernameClient()],
+	baseURL: 'https://feat-consistently-divx-heater.trycloudflare.com'
 });

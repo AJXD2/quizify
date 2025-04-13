@@ -180,7 +180,9 @@
 		</div>
 	{/if}
 
-	<main class="container mx-auto mb-16 flex-1 px-4 py-6 sm:mb-1 sm:py-8">{@render children()}</main>
+	<main class="container mx-auto mb-16 flex-1 overflow-hidden px-4 py-6 sm:mb-1 sm:py-8">
+		{@render children()}
+	</main>
 
 	<footer class="footer footer-center bg-base-200 text-base-content hidden p-4 sm:flex md:p-6">
 		<div class="grid grid-flow-row gap-3 text-sm sm:grid-flow-col sm:gap-6">
