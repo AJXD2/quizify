@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type { LayoutProps } from './$types';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
@@ -13,45 +13,41 @@
 	const session = authClient.useSession();
 	let isSidebarOpen = $state(false);
 
-	function toggleSidebar() {
-		isSidebarOpen = !isSidebarOpen;
-	}
-
 	// Close sidebar when route changes
 	onNavigate(() => {
 		isSidebarOpen = false;
 	});
 </script>
 
-<div class="drawer lg:drawer-open bg-base-100 min-h-screen">
-	<!-- Mobile drawer toggle -->
+<div class="drawer lg:drawer-open bg-base-100 min-h-[100dvh]">
 	<input id="quiz-drawer" type="checkbox" class="drawer-toggle" bind:checked={isSidebarOpen} />
 
 	<div class="drawer-content flex flex-col">
 		<!-- Top navbar for mobile view -->
-		<div class="navbar bg-base-100 sticky top-0 z-10 border-b lg:hidden">
+		<div class="navbar bg-base-100 border-base-300 sticky top-0 z-5 border-b px-2 sm:hidden">
 			<div class="flex-none">
 				<label for="quiz-drawer" class="btn btn-square btn-ghost drawer-button">
 					<Icon icon="mdi:menu" class="h-6 w-6" />
 				</label>
 			</div>
-			<div class="flex-1">
-				<span class="truncate text-xl font-bold">{quiz.title}</span>
+			<div class="flex flex-1 justify-between px-2">
+				<span class="truncate text-lg font-bold">{quiz.title}</span>
+				<Profile user={quiz.creator} />
 			</div>
 		</div>
 
 		<!-- Main content area -->
-		<main class="flex-1 overflow-y-auto p-2 md:p-6">
+		<main class="flex-1 overflow-y-auto p-2 pb-20 md:p-6 md:pb-6">
 			{@render children()}
 		</main>
 	</div>
 
 	<!-- Sidebar -->
-	<aside class="drawer-side z-20">
+	<aside class="drawer-side z-[9]">
 		<label for="quiz-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-		<div class="bg-base-200 text-base-content flex h-full w-64 flex-col">
+		<div class="bg-base-200 text-base-content flex h-full w-64 flex-col overflow-y-auto">
 			<!-- Quiz navigation -->
-			<div class="flex-1 overflow-y-auto p-4">
+			<div class="flex-1 p-4">
 				<!-- Quiz title header -->
 				<div class="mb-4 border-b py-3 break-words">
 					<h2 class="text-xl font-bold">{quiz.title}</h2>
@@ -64,7 +60,7 @@
 				</div>
 
 				<!-- Main navigation -->
-				<div class="menu bg-base-200 rounded-box w-full gap-1">
+				<div class="menu rounded-box bg-base-200 w-full gap-1">
 					<h3 class="mt-2 mb-1 pl-4 text-sm font-semibold uppercase opacity-70">Navigation</h3>
 					<li>
 						<a
