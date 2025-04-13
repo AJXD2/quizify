@@ -37,10 +37,8 @@ export const load = (async ({ request, params }) => {
 export const actions: Actions = {
 	default: async ({ request, params }) => {
 		const form = await superValidate(request, zod(quizSchema));
-		console.log('Received form data:', form.data);
 
 		if (!form.valid) {
-			console.log('Form validation errors:', form.errors);
 			return { form };
 		}
 
@@ -177,8 +175,7 @@ export const actions: Actions = {
 				form: await superValidate(updatedQuizData, zod(quizSchema)),
 				success: true
 			};
-		} catch (err) {
-			console.error('Failed to update quiz:', err);
+		} catch {
 			return fail(400, {
 				form,
 				success: false,

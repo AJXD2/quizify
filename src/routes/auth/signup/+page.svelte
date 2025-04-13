@@ -65,7 +65,6 @@
 			} catch (err) {
 				usernameStatus = 'idle';
 				usernameMessage = 'Error checking availability';
-				console.error(err);
 			}
 		}, 500);
 	};

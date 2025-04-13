@@ -20,7 +20,6 @@
 				});
 				goto(`/quizzes/${form.data.id}`);
 			}
-			console.log(form.errors);
 		},
 		onError: ({ result }) => {
 			toasts.error({
@@ -49,7 +48,6 @@
 	};
 
 	const addAnswer = (questionIndex: number) => {
-		console.log($form.questions[questionIndex]);
 		const newAnswer = {
 			questionId: $form.questions[questionIndex].id,
 			text: '',

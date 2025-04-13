@@ -51,8 +51,7 @@ export const actions: Actions = {
 				.returning();
 
 			return { success: true, quiz: newQuiz[0] };
-		} catch (error) {
-			console.error('Failed to create quiz:', error);
+		} catch {
 			return fail(500, { message: 'Failed to create quiz' });
 		}
 	}
