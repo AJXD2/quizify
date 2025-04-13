@@ -1,13 +1,13 @@
-import { fail, redirect, type Actions } from '@sveltejs/kit';
+import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { attempt, attemptAnswer, answer } from '$lib/server/db/schema';
 import { and, eq, isNull } from 'drizzle-orm';
-
+import { loginRedirect } from '$lib/utils';
 export const load = (async ({ params, locals }) => {
 	const { user } = locals;
 	if (!user) {
-		throw redirect(302, '/login?redirect=/quizzes/' + params.quizId + '/take');
+		throw loginRedirect('/quizzes/' + params.quizId + '/take');
 	}
 	// Direct query to get active attempt
 	const activeAttempt = await db.query.attempt.findFirst({

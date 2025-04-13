@@ -1,3 +1,6 @@
+import { redirect } from '@sveltejs/kit';
+import type { ToastType } from './stores/toast';
+
 /**
  * Fisher-Yates shuffle algorithm to randomize array order
  */
@@ -59,4 +62,18 @@ export function calculateTimeSpent(startTime: Date | null, endTime: Date | null)
 export function getScreenSize(): string {
 	const width = window.innerWidth;
 	return width < 640 ? 'sm' : width < 768 ? 'md' : width < 1024 ? 'lg' : 'xl';
+}
+
+export function redirectWithMessage(redirectTo: string, message: string, messageType: ToastType) {
+	const url = new URL(redirectTo);
+	url.searchParams.set('message', message);
+	url.searchParams.set('messageType', messageType);
+	return redirect(302, url.toString());
+}
+
+export function loginRedirect(redirectTo: string) {
+	return redirect(
+		302,
+		`/auth/login?message=${encodeURIComponent('You must be logged in to access this page')}&messageType=error&redirectTo=${encodeURIComponent(redirectTo)}`
+	);
 }

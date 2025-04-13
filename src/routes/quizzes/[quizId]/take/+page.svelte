@@ -191,9 +191,9 @@
 						</span>
 						<div class="divider"></div>
 						{#each quiz.questions[currentQuestionIndex].answers as answer}
-							<div class="form-control">
+							<div class="form-control w-full">
 								<label
-									class="label hover:bg-base-200 cursor-pointer justify-start gap-3 rounded-lg py-2"
+									class="label btn btn-ghost w-full cursor-pointer justify-start gap-3 rounded-lg py-2"
 								>
 									<input
 										type="radio"

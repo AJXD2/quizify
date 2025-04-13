@@ -1,4 +1,4 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import {
 	quiz,
 	user,
@@ -17,6 +17,23 @@ export type Answer = InferSelectModel<typeof answer>;
 export type Attempt = InferSelectModel<typeof attempt>;
 export type AttemptAnswer = InferSelectModel<typeof attemptAnswer>;
 export type Leaderboard = InferSelectModel<typeof leaderboard>;
+
+// For INSERT queries - base types from the database
+export type NewQuiz = InferInsertModel<typeof quiz>;
+export type NewQuestion = InferInsertModel<typeof question>;
+export type NewAnswer = InferInsertModel<typeof answer>;
+export type NewAttempt = InferInsertModel<typeof attempt>;
+export type NewAttemptAnswer = InferInsertModel<typeof attemptAnswer>;
+export type NewLeaderboard = InferInsertModel<typeof leaderboard>;
+
+// Extended types for the quiz editor
+export type QuestionWithAnswers = NewQuestion & {
+	answers: Array<{
+		id?: string;
+		text: string;
+		isCorrect: boolean;
+	}>;
+};
 
 // Relation types - using Drizzle's type system
 export type QuizWithCreator = Quiz & {
