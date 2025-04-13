@@ -37,6 +37,7 @@
 		"prettier-plugin-tailwindcss": "^0.6.11",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
+		"sveltekit-superforms": "^2.24.1",
 		"tailwindcss": "^4.0.0",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.20.0",
@@ -48,6 +49,7 @@
 		"better-auth": "^1.2.5",
 		"dotenv": "^16.4.7",
 		"drizzle-orm": "^0.40.0",
+		"drizzle-zod": "^0.7.1",
 		"resend": "^4.2.0",
 		"zod": "^3.24.2"
 	}

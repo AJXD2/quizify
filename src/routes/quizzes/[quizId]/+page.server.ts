@@ -4,8 +4,11 @@ import { db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
 import { attempt } from '$lib/server/db/schema';
 
-export const load = (async () => {
-	return {};
+export const load = (async ({ locals }) => {
+	const { user } = locals;
+	return {
+		user
+	};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {

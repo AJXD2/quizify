@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
-	import type { LayoutData } from './$types';
+	import type { LayoutProps } from './$types';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/stores';
 	import Profile from '$lib/components/Profile.svelte';
 	import { onNavigate } from '$app/navigation';
+	import { authClient } from '$lib/auth/client';
 
-	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	let { data, children }: LayoutProps = $props();
 	const { quiz } = data;
 
+	const session = authClient.useSession();
 	let isSidebarOpen = $state(false);
 
 	function toggleSidebar() {
@@ -39,7 +41,7 @@
 		</div>
 
 		<!-- Main content area -->
-		<main class="flex-1 overflow-y-auto p-4 md:p-6">
+		<main class="flex-1 overflow-y-auto p-2 md:p-6">
 			{@render children()}
 		</main>
 	</div>
@@ -108,6 +110,31 @@
 							<span>Take Quiz</span>
 						</a>
 					</li>
+					{#if $session.data?.user.id === quiz.creatorId}
+						<div class="divider">Creator Actions</div>
+						<li>
+							<a
+								href="/quizzes/{quiz.id}/edit"
+								class="text-warning flex items-center gap-3 {$page.url.pathname.includes('/edit')
+									? 'bg-warning-content/15'
+									: ''}"
+							>
+								<Icon icon="mdi:puzzle-edit" class="h-5 w-5" />
+								<span>Edit Quiz</span>
+							</a>
+						</li>
+						<li>
+							<a
+								href="/quizzes/{quiz.id}/delete"
+								class="text-error flex items-center gap-3 {$page.url.pathname.includes('/delete')
+									? 'bg-error-content/15'
+									: ''}"
+							>
+								<Icon icon="mdi:delete" class="h-5 w-5" />
+								<span>Delete Quiz</span>
+							</a>
+						</li>
+					{/if}
 				</div>
 			</div>
 

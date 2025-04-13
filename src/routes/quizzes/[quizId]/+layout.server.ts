@@ -56,7 +56,6 @@ export const load = (async ({ params, locals }) => {
 				orderBy: [desc(attempt.startedAt)]
 			})
 		: [];
-
 	return {
 		quiz: quizData,
 		userAttempts
