@@ -2,13 +2,12 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { quizSchema } from '$lib/schemas/quiz';
+import { quizSchema, type QuizType } from '$lib/schemas/quiz';
 import { getSessionOrRedirect } from '$lib/server/utils';
 import type { PageServerLoad } from './$types';
 import { quiz, question, answer, attempt, attemptAnswer } from '$lib/server/db/schema';
 import { db } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import type { QuizType } from '$lib/schemas/quiz';
 
 export const load = (async ({ request, params }) => {
 	const session = await getSessionOrRedirect(request, `/quizzes/${params.quizId}/edit`);
@@ -95,8 +94,10 @@ export const actions: Actions = {
 				.where(eq(quiz.id, form.data.id));
 
 			// Delete removed questions and their answers
-			const questionIds = form.data.questions.map((q) => q.id).filter(Boolean);
-			const removedQuestions = existingQuiz.questions.filter((q) => !questionIds.includes(q.id));
+			const questionIds = form.data.questions.map((q: { id: string }) => q.id).filter(Boolean);
+			const removedQuestions = existingQuiz.questions.filter(
+				(q: { id: string }) => !questionIds.includes(q.id)
+			);
 
 			for (const q of removedQuestions) {
 				await db.delete(answer).where(eq(answer.questionId, q.id));
@@ -109,12 +110,16 @@ export const actions: Actions = {
 
 				if (currentQuestion.id) {
 					// Delete removed answers for this question
-					const answerIds = currentQuestion.answers.map((a) => a.id).filter(Boolean);
-					const existingQuestion = existingQuiz.questions.find((q) => q.id === currentQuestion.id);
+					const answerIds = currentQuestion.answers
+						.map((a: { id: string }) => a.id)
+						.filter(Boolean);
+					const existingQuestion = existingQuiz.questions.find(
+						(q: { id: string }) => q.id === currentQuestion.id
+					);
 
 					if (existingQuestion) {
 						const removedAnswers = existingQuestion.answers.filter(
-							(a) => !answerIds.includes(a.id)
+							(a: { id: string }) => !answerIds.includes(a.id)
 						);
 						for (const a of removedAnswers) {
 							await db.delete(answer).where(eq(answer.id, a.id));
@@ -193,16 +198,16 @@ function checkQuizStructuralChanges(existingQuiz: QuizType, newQuiz: QuizType): 
 
 	// For each existing question, check if it still exists and has the same structure
 	for (const oldQuestion of existingQuiz.questions) {
-		const newQuestion = newQuiz.questions.find((q) => q.id === oldQuestion.id);
+		const newQuestion = newQuiz.questions.find((q: { id: string }) => q.id === oldQuestion.id);
 
 		// If question was removed or answers changed
 		if (
 			!newQuestion ||
 			oldQuestion.answers.length !== newQuestion.answers.length ||
 			// Check if any answer text changed
-			!oldQuestion.answers.every((oldAns) =>
+			!oldQuestion.answers.every((oldAns: { id: string; text: string; isCorrect: boolean }) =>
 				newQuestion.answers.some(
-					(newAns) =>
+					(newAns: { id: string; text: string; isCorrect: boolean }) =>
 						newAns.id === oldAns.id &&
 						newAns.text === oldAns.text &&
 						newAns.isCorrect === oldAns.isCorrect
