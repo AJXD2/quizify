@@ -4,7 +4,97 @@
 	import 'aos/dist/aos.css';
 	import { onMount } from 'svelte';
 	import type { PageProps } from './$types';
+	import Particles, { particlesInit } from '@tsparticles/svelte';
+	import { loadSlim } from '@tsparticles/slim';
+	import type { Container, IOptions, RecursivePartial } from '@tsparticles/engine';
+	let particlesConfig: RecursivePartial<IOptions> = {
+		fullscreen: {
+			enable: false
+		},
+		fpsLimit: 30,
+		particles: {
+			number: {
+				value: 50,
+				density: {
+					enable: true,
+					height: 400,
+					width: 400
+				}
+			},
+			color: {
+				value: '#1fb854'
+			},
+			links: {
+				enable: true,
+				color: '#ffffff',
+				distance: 120,
+				opacity: 0.4,
+				width: 1
+			},
+			collisions: {
+				enable: true,
+				mode: 'bounce'
+			},
+			move: {
+				enable: true,
+				speed: 1.2,
+				direction: 'none',
+				random: false,
+				straight: false,
+				outModes: {
+					default: 'bounce'
+				}
+			},
+			opacity: {
+				value: 0.5,
+				animation: {
+					enable: true,
+					speed: 0.5,
+					sync: false
+				}
+			},
+			shape: {
+				type: 'circle'
+			},
+			size: {
+				value: { min: 1, max: 3 }
+			}
+		},
+		interactivity: {
+			events: {
+				onHover: {
+					enable: true,
+					mode: 'grab'
+				},
+				onClick: {
+					enable: true,
+					mode: 'repulse'
+				},
+				resize: {
+					enable: true
+				}
+			},
+			modes: {
+				repulse: {
+					distance: 250,
+					duration: 0.4
+				},
+				push: {
+					quantity: 4
+				}
+			}
+		},
+		detectRetina: true
+	};
 
+	let onParticlesLoaded = (event: CustomEvent<{ container: Container }>) => {
+		const particlesContainer = event.detail.container;
+		console.log(particlesContainer);
+	};
+
+	void particlesInit(async (engine) => {
+		await loadSlim(engine);
+	});
 	const features = [
 		{
 			icon: 'fa-solid:lightbulb',
@@ -24,9 +114,13 @@
 	];
 
 	const testimonials = [
-		{ name: 'Luna M.', quote: 'Quizify turned study night into game night!', delay: 100 },
-		{ name: 'Alex J.', quote: 'I’ve never learned this much while laughing.', delay: 200 },
-		{ name: 'Sam R.', quote: 'Made a quiz on cryptids. It blew up. Now I’m famous.', delay: 300 }
+		{ name: 'Example User', quote: 'Quizify turned study night into game night!', delay: 100 },
+		{ name: 'Example User', quote: 'I’ve never learned this much while laughing.', delay: 200 },
+		{
+			name: 'Example User',
+			quote: 'Made a quiz on cryptids. It blew up. Now I’m famous.',
+			delay: 300
+		}
 	];
 
 	let { data }: PageProps = $props();
@@ -40,13 +134,22 @@
 	});
 </script>
 
-<!-- Hero Section -->
 <div class="space-y-2">
+	<!-- Hero Section -->
 	<div
-		class="hero from-primary/10 rounded-box to-base-200 min-h-screen bg-gradient-to-br px-4 sm:px-6 lg:px-8"
+		class="hero rounded-box from-primary/10 to-secondary/20 relative min-h-screen bg-gradient-to-br px-4 sm:px-6 lg:px-8"
 		data-aos="fade-up"
 	>
-		<div class="hero-content flex flex-col items-center text-center">
+		<!-- particles layer -->
+		<Particles
+			id="tsparticles"
+			class="absolute inset-0 z-[1]"
+			options={particlesConfig}
+			on:particlesLoaded={onParticlesLoaded}
+		/>
+
+		<!-- content layer -->
+		<div class="hero-content relative z-20 flex flex-col items-center text-center">
 			<div class="bg-base-100 w-full max-w-3xl rounded-3xl p-8 shadow-2xl sm:p-10">
 				<h1
 					class="text-primary mb-4 text-4xl font-extrabold sm:text-5xl md:text-6xl"

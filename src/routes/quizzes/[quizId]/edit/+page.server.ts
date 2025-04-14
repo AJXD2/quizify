@@ -2,7 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { quizSchema, type QuizType } from '$lib/schemas/quiz';
+import { quizSchema, type AnswerType, type QuestionType, type QuizType } from '$lib/schemas/quiz';
 import { getSessionOrRedirect } from '$lib/server/utils';
 import type { PageServerLoad } from './$types';
 import { quiz, question, answer, attempt, attemptAnswer } from '$lib/server/db/schema';
@@ -94,9 +94,9 @@ export const actions: Actions = {
 				.where(eq(quiz.id, form.data.id));
 
 			// Delete removed questions and their answers
-			const questionIds = form.data.questions.map((q: { id: string }) => q.id).filter(Boolean);
+			const questionIds = form.data.questions.map((q: QuestionType) => q.id).filter(Boolean);
 			const removedQuestions = existingQuiz.questions.filter(
-				(q: { id: string }) => !questionIds.includes(q.id)
+				(q: QuestionType) => !questionIds.includes(q.id)
 			);
 
 			for (const q of removedQuestions) {
@@ -109,24 +109,24 @@ export const actions: Actions = {
 				let updatedQuestion;
 
 				if (currentQuestion.id) {
-					// Delete removed answers for this question
-					const answerIds = currentQuestion.answers
-						.map((a: { id: string }) => a.id)
-						.filter(Boolean);
+					// Ensure we get the existing question properly
 					const existingQuestion = existingQuiz.questions.find(
-						(q: { id: string }) => q.id === currentQuestion.id
+						(q: QuestionType) => q.id === currentQuestion.id
 					);
 
 					if (existingQuestion) {
+						// Delete removed answers for this question
+						const answerIds = currentQuestion.answers.map((a: AnswerType) => a.id).filter(Boolean);
+
 						const removedAnswers = existingQuestion.answers.filter(
-							(a: { id: string }) => !answerIds.includes(a.id)
+							(a: AnswerType) => !answerIds.includes(a.id)
 						);
 						for (const a of removedAnswers) {
 							await db.delete(answer).where(eq(answer.id, a.id));
 						}
 					}
 
-					// Update existing question
+					// Update existing question with type-safety
 					[updatedQuestion] = await db
 						.update(question)
 						.set({ text: currentQuestion.text, quizId: form.data.id })
@@ -146,6 +146,7 @@ export const actions: Actions = {
 				// Handle answers for this question
 				for (const currentAnswer of currentQuestion.answers) {
 					if (currentAnswer.id) {
+						// Update existing answer
 						await db
 							.update(answer)
 							.set({
@@ -155,6 +156,7 @@ export const actions: Actions = {
 							})
 							.where(eq(answer.id, currentAnswer.id));
 					} else {
+						// Insert new answer
 						await db.insert(answer).values({
 							text: currentAnswer.text,
 							isCorrect: currentAnswer.isCorrect,
@@ -198,16 +200,16 @@ function checkQuizStructuralChanges(existingQuiz: QuizType, newQuiz: QuizType): 
 
 	// For each existing question, check if it still exists and has the same structure
 	for (const oldQuestion of existingQuiz.questions) {
-		const newQuestion = newQuiz.questions.find((q: { id: string }) => q.id === oldQuestion.id);
+		const newQuestion = newQuiz.questions.find((q) => q.id === oldQuestion.id);
 
 		// If question was removed or answers changed
 		if (
 			!newQuestion ||
 			oldQuestion.answers.length !== newQuestion.answers.length ||
 			// Check if any answer text changed
-			!oldQuestion.answers.every((oldAns: { id: string; text: string; isCorrect: boolean }) =>
+			!oldQuestion.answers.every((oldAns) =>
 				newQuestion.answers.some(
-					(newAns: { id: string; text: string; isCorrect: boolean }) =>
+					(newAns) =>
 						newAns.id === oldAns.id &&
 						newAns.text === oldAns.text &&
 						newAns.isCorrect === oldAns.isCorrect

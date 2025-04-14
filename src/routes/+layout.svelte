@@ -41,24 +41,6 @@
 		}
 	];
 
-	let lastScrollY = 0;
-	let isNavbarHidden = $state(false);
-
-	function handleScroll() {
-		// Only handle scroll on mobile screens
-		if (window.innerWidth >= 1024) return; // lg breakpoint is 1024px
-
-		const currentScrollY = window.scrollY;
-		if (currentScrollY > lastScrollY && currentScrollY > 100) {
-			// Scrolling down & past threshold
-			isNavbarHidden = true;
-		} else {
-			// Scrolling up or at top
-			isNavbarHidden = false;
-		}
-		lastScrollY = currentScrollY;
-	}
-
 	onMount(() => {
 		if ($session.data?.user) {
 			// If user is logged in, check if they have a username
@@ -77,19 +59,6 @@
 				});
 			}
 		}
-
-		// Add scroll event listener
-		window.addEventListener('scroll', handleScroll, { passive: true });
-		// Reset navbar state when screen size changes
-		window.addEventListener('resize', () => {
-			if (window.innerWidth >= 1024) {
-				isNavbarHidden = false;
-			}
-		});
-		return () => {
-			window.removeEventListener('scroll', handleScroll);
-			window.removeEventListener('resize', () => {});
-		};
 	});
 </script>
 

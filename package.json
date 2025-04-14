@@ -46,6 +46,7 @@
 	"dependencies": {
 		"@iconify/svelte": "^4.2.0",
 		"@neondatabase/serverless": "^0.10.4",
+		"@tsparticles/svelte": "^3.1.1",
 		"@types/aos": "^3.0.7",
 		"aos": "^2.3.4",
 		"better-auth": "^1.2.5",
@@ -53,6 +54,7 @@
 		"drizzle-orm": "^0.40.0",
 		"drizzle-zod": "^0.7.1",
 		"resend": "^4.2.0",
+		"tsparticles": "^3.8.1",
 		"zod": "^3.24.2"
 	}
 }

@@ -67,7 +67,7 @@ export const auth = betterAuth({
 		}
 	},
 
-	url: env.APP_URL,
+	url: env.VITE_APP_URL,
 	secret: env.BETTER_AUTH_SECRET
 });
 
