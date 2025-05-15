@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
-import { env } from './env';
+import { RESEND_API_KEY } from '$env/static/private';
 
-const resend = new Resend(env.RESEND_API_KEY);
+const resend = new Resend(RESEND_API_KEY);
 
 export async function sendEmail(to: string, subject: string, html: string) {
 	const { data, error } = await resend.emails.send({
