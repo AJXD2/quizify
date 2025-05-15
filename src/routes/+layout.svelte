@@ -104,7 +104,7 @@
 		class="navbar bg-base-200/95 supports-[backdrop-filter]:bg-base-200/80 px-4 shadow-lg backdrop-blur"
 	>
 		<div class="navbar-start">
-			<a href="/" class="btn btn-ghost text-lg font-bold normal-case sm:text-xl">QuizMaster</a>
+			<a href="/" class="btn btn-ghost text-lg font-bold normal-case sm:text-xl">Quizify</a>
 		</div>
 		<div class="navbar-center hidden gap-1 md:flex">
 			{#each navLinks as link (link.href)}
@@ -192,7 +192,7 @@
 		</div>
 		<div>
 			<p class="text-center text-xs opacity-80 sm:text-sm">
-				Copyright © {new Date().getFullYear()} - QuizMaster. All rights reserved.
+				Copyright © {new Date().getFullYear()} - Quizify. All rights reserved.
 			</p>
 		</div>
 	</footer>
