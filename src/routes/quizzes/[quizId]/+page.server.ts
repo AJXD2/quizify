@@ -2,7 +2,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { and, eq } from 'drizzle-orm';
-import { attempt } from '$lib/server/db/schema';
+import { attempt, quiz } from '$lib/server/db/schema';
 
 export const load = (async ({ locals }) => {
 	const { user } = locals;
@@ -33,6 +33,31 @@ export const actions: Actions = {
 			return fail(400, { message: 'Failed to forfeit attempt' });
 		}
 
+		return { success: true };
+	},
+	deleteQuiz: async ({ locals, params }) => {
+		const { session, user } = locals;
+		if (!session || !user) {
+			return fail(401, { message: 'Unauthorized' });
+		}
+		const quizId = params.quizId;
+		if (!quizId) {
+			return fail(400, { message: 'Invalid quiz ID' });
+		}
+		const quizData = await db.query.quiz.findFirst({
+			where: eq(quiz.id, quizId)
+		});
+		if (!quizData) {
+			return fail(404, { message: 'Quiz not found' });
+		}
+		if (user.id !== quizData.creatorId) {
+			return fail(403, { message: 'Unauthorized' });
+		}
+
+		const result = await db.delete(quiz).where(eq(quiz.id, quizId));
+		if (!result) {
+			return fail(400, { message: 'Failed to delete quiz' });
+		}
 		return { success: true };
 	}
 };

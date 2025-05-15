@@ -136,7 +136,7 @@
 
 						<div class="mt-4 space-y-6">
 							{#if $form.questions.length > 0}
-								{#each $form.questions as question, questionIndex}
+								{#each $form.questions as question, questionIndex (question.id)}
 									<div class="card bg-base-100 shadow-md">
 										<div class="card-body gap-4 p-3">
 											<!-- Question Header -->
@@ -181,7 +181,7 @@
 													{/each}
 												{/if}
 												<div class="space-y-2">
-													{#each question.answers as answer, answerIndex}
+													{#each question.answers as answer, answerIndex (answer.id)}
 														<div
 															class="bg-base-200 flex items-center justify-between gap-2 rounded-lg p-3"
 														>
@@ -189,16 +189,13 @@
 																type="radio"
 																name="correct-{questionIndex}"
 																class="radio radio-primary"
-																checked={$form.questions[questionIndex].answers[answerIndex]
-																	.isCorrect}
+																checked={answer.isCorrect}
 																onchange={() => setCorrectAnswer(questionIndex, answerIndex)}
 															/>
 															<div class="flex w-full flex-col gap-1">
 																<input
 																	type="text"
-																	bind:value={
-																		$form.questions[questionIndex].answers[answerIndex].text
-																	}
+																	bind:value={answer.text}
 																	placeholder="Answer option"
 																	class="input input-bordered input-sm w-full flex-1"
 																	class:input-error={$errors.questions?.[questionIndex]?.answers?.[

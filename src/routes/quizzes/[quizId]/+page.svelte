@@ -6,8 +6,9 @@
 	import { goto } from '$app/navigation';
 	import AttemptTable from '$lib/components/AttemptTable.svelte';
 	import { toasts } from '$lib/stores/toast';
+	import { page } from '$app/state';
 
-	let { data }: { data: PageData } = $props();
+	const { data }: { data: PageData } = $props();
 	const { quiz, userAttempts: allAttempts } = data;
 
 	// Calculate statistics - adjust based on actual data model
@@ -24,7 +25,7 @@
 		// Use /?forfeitAttempt action
 		const formData = new FormData();
 		formData.set('attemptId', attemptId);
-		const response = await fetch(`?/forfeitAttempt`, {
+		const response = await fetch('?/forfeitAttempt', {
 			method: 'POST',
 			body: formData
 		});
@@ -37,6 +38,9 @@
 		}
 		userAttempts = userAttempts.filter((attempt) => attempt.id !== attemptId);
 	};
+
+	// Check if user is quiz creator
+	const isCreator = $derived(quiz.creator.id === page.data.user?.id);
 </script>
 
 <div class="flex flex-col gap-6">
@@ -45,6 +49,12 @@
 		<div class="mb-4 flex items-center justify-between">
 			<h1 class="text-3xl font-bold">{quiz.title}</h1>
 			<div class="flex gap-2">
+				{#if isCreator}
+					<a href="/quizzes/{quiz.id}/statistics" class="btn btn-ghost">
+						<Icon icon="mdi:chart-box" class="mr-2 h-5 w-5" />
+						Statistics
+					</a>
+				{/if}
 				<button class="btn btn-primary" onclick={takeQuiz}>
 					<Icon icon="mdi:pencil-outline" class="mr-2 h-5 w-5" />
 					Take Quiz
@@ -99,9 +109,20 @@
 			<!-- Details -->
 			<div class="card bg-base-200 lg:col-span-1 xl:col-span-2">
 				<div class="card-body">
-					<h2 class="card-title mb-2 flex items-center">
-						<Icon icon="mdi:information-outline" class="mr-2 h-6 w-6" />
-						Quiz Details
+					<h2 class="card-title mb-2 flex items-center justify-between">
+						<div class="flex items-center">
+							<Icon icon="mdi:information-outline" class="mr-2 h-6 w-6" />
+							Quiz Details
+						</div>
+						{#if isCreator}
+							<a
+								href="/quizzes/{quiz.id}/statistics"
+								class="btn btn-ghost btn-sm gap-2 text-base normal-case"
+							>
+								<Icon icon="mdi:chart-box" class="h-4 w-4" />
+								View Statistics
+							</a>
+						{/if}
 					</h2>
 
 					<div class="divider my-1"></div>
@@ -209,7 +230,7 @@
 
 				{#if userAttempts && userAttempts.length > 0}
 					<div class="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-						{#each userAttempts as attempt}
+						{#each userAttempts as attempt (attempt.id)}
 							<AttemptCard {attempt} onForfeit={() => forfeitAttempt(attempt.id)} />
 						{/each}
 					</div>

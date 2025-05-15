@@ -81,7 +81,7 @@
 				<div class="divider my-1"></div>
 
 				<div class="flex flex-col gap-6">
-					{#each quiz.questions as question, index}
+					{#each quiz.questions as question, index (question.id)}
 						{@const attemptAnswer = attempt.answers.find((a) => a.questionId === question.id)}
 						{@const correctAnswer = question.answers.find((a) => a.isCorrect)}
 						<div class="card bg-base-100 shadow-lg">
@@ -118,7 +118,7 @@
 								<div class="divider"></div>
 
 								<div class="grid gap-3">
-									{#each question.answers as answer}
+									{#each question.answers as answer (answer.id)}
 										{@const isSelected = answer.id === attemptAnswer?.answerId}
 										{@const isCorrect = answer.isCorrect}
 										<div

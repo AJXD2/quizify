@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let { children } = $props();
 	const session = authClient.useSession();
@@ -15,6 +15,7 @@
 		label: string;
 		href: string;
 		icon: string;
+		validator: () => boolean;
 		mobileOnly?: boolean;
 	};
 
@@ -22,22 +23,45 @@
 		{
 			label: 'Browse',
 			href: '/quizzes',
-			icon: 'mdi:magnify'
+			icon: 'mdi:magnify',
+			validator: () => {
+				return (
+					page.url.pathname.split('/')[1] === 'quizzes' &&
+					page.url.pathname.split('/')[2] !== 'create'
+				);
+			}
 		},
 		{
 			label: 'Create',
 			href: '/quizzes/create',
-			icon: 'mdi:plus'
+			icon: 'mdi:plus',
+			validator: () => {
+				return (
+					page.url.pathname.split('/')[1] === 'quizzes' &&
+					page.url.pathname.split('/')[2] === 'create'
+				);
+			}
 		},
 		{
 			label: 'Leaderboard',
 			href: '/leaderboard',
-			icon: 'mdi:trophy'
+			icon: 'mdi:trophy',
+			validator: () => {
+				return page.url.pathname.split('/')[1] === 'leaderboard';
+			}
 		},
 		{
 			label: 'Profile',
 			href: '/profile',
-			icon: 'mdi:account'
+			icon: 'mdi:account',
+			validator: () => {
+				const pathParts = page.url.pathname.split('/');
+				return (
+					pathParts[1] === 'profile' ||
+					(pathParts[1] === 'user' && pathParts[2] === $session.data?.user.username) ||
+					pathParts[1] === 'account'
+				);
+			}
 		}
 	];
 
@@ -77,10 +101,10 @@
 			<a href="/" class="btn btn-ghost text-lg font-bold normal-case sm:text-xl">QuizMaster</a>
 		</div>
 		<div class="navbar-center hidden gap-1 md:flex">
-			{#each navLinks as link}
+			{#each navLinks as link (link.href)}
 				<a
 					href={link.href}
-					class="btn btn-ghost btn-sm gap-2 {$page.url.pathname === link.href ? 'btn-active' : ''}"
+					class="btn btn-ghost btn-sm gap-2 {page.url.pathname === link.href ? 'btn-active' : ''}"
 				>
 					<Icon icon={link.icon} class="h-5 w-5" />
 					{link.label}
@@ -113,7 +137,7 @@
 						</li>
 						<li>
 							<button
-								onclick={() => authClient.signOut().then(() => goto($page.url.pathname))}
+								onclick={() => authClient.signOut().then(() => goto(page.url.pathname))}
 								class="text-error gap-3"
 							>
 								<Icon icon="mdi:logout" class="h-5 w-5" />
@@ -149,7 +173,7 @@
 		</div>
 	{/if}
 
-	<main class="container mx-auto mb-16 flex-1 overflow-hidden px-4 py-6 sm:mb-1 sm:py-8">
+	<main class="container mx-auto mb-2 flex-1 overflow-hidden px-4 py-6 sm:mb-1 sm:py-8">
 		{@render children()}
 	</main>
 
@@ -168,12 +192,12 @@
 	</footer>
 
 	<div class="dock fixed right-0 bottom-0 left-0 z-50 sm:hidden">
-		<a href="/" class:dock-active={$page.url.pathname === '/'}>
+		<a href="/" class:dock-active={page.url.pathname === '/'}>
 			<Icon icon="mdi:home" class="h-5 w-5" />
 			<span class="dock-label">Home</span>
 		</a>
-		{#each navLinks as link}
-			<a href={link.href} class:dock-active={$page.url.pathname.startsWith(link.href)}>
+		{#each navLinks as link (link.href)}
+			<a href={link.href} class:dock-active={link.validator()}>
 				<Icon icon={link.icon} class="h-5 w-5" />
 				<span class="dock-label">{link.label}</span>
 			</a>

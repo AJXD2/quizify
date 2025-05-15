@@ -54,6 +54,13 @@ export type QuizWithCreatorAndQuestions = Quiz & {
 	creator: Profile;
 	questions: Question[];
 };
+// TODO: Fix this in future. This is atrocious.
+export type QuizWithCreatorAndQuestionsAndAnswers = Quiz & {
+	creator: Profile;
+	questions: (Question & {
+		answers: Answer[];
+	})[];
+};
 
 export type CompleteAttempt = Attempt & {
 	answers: (AttemptAnswer & {

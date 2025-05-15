@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QuizCard from '$lib/components/QuizCard.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -62,7 +63,7 @@
 			<h2 class="card-title text-primary mb-4">Recent Activity</h2>
 			{#if userProfile.attempts && userProfile.attempts.length > 0}
 				<div class="space-y-3">
-					{#each userProfile.attempts.slice(0, 5) as attempt}
+					{#each userProfile.attempts.slice(0, 5) as attempt (attempt.id)}
 						<div
 							class="bg-base-200 hover:bg-base-300 border-base-300 rounded-lg border p-4 transition-colors"
 						>
@@ -95,16 +96,8 @@
 </div>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-	{#each userProfile.quizzes as quiz}
-		<div class="card bg-base-100 shadow-xl">
-			<div class="card-body">
-				<h2 class="card-title">{quiz.title}</h2>
-				<p class="text-sm text-gray-500">{quiz.description}</p>
-				<div class="card-actions mt-4 justify-end">
-					<a href="/quiz/{quiz.id}" class="btn btn-primary">Play Quiz</a>
-				</div>
-			</div>
-		</div>
+	{#each userProfile.quizzes as quiz (quiz.id)}
+		<QuizCard quiz={{ ...quiz, creator: userProfile }} />
 	{/each}
 
 	{#if userProfile.quizzes.length === 0}

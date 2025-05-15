@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { toasts, setToastContext } from '$lib/stores/toast';
+	import { toasts } from '$lib/stores/toast';
 	import Toast from './Toast.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 
 	const { max = 5 }: { max?: number } = $props();
 
+	// Reactive statement to derive visible toasts
 	let visibleToasts = $derived([...$toasts].slice(-max));
 
-	// Initialize toast system
-	onMount(() => {
+	// Clear toasts when component is destroyed
+	$effect(() => {
 		return () => {
 			toasts.clear();
 		};
@@ -18,7 +18,7 @@
 </script>
 
 {#if $toasts.length}
-	<div class="toast toast-start toast-bottom z-50">
+	<div class="toast-container fixed top-16 z-50 flex flex-col gap-2 px-4 sm:items-end">
 		{#each visibleToasts as toast (toast.id)}
 			<div
 				animate:flip={{ duration: 200 }}

@@ -29,7 +29,7 @@
 			{#if isCompleted}
 				<div class="badge badge-lg gap-2">
 					<Icon icon="mdi:check-circle-outline" class="h-6 w-6" />
-					<span>Completed in {calculateTimeSpent(attempt.startedAt, attempt.completedAt)}</span>
+					<span>Completed in {timeSpent}</span>
 				</div>
 			{:else}
 				<div class="badge badge-lg badge-warning gap-2" class:animate-pulse={!isCompleted}>

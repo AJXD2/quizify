@@ -226,8 +226,8 @@
 		</div>
 	</section>
 
-	<!-- Testimonials -->
-	<section
+	<!-- TODO: Add testimonials from real users -->
+	<!-- <section
 		class="from-base-100 rounded-box to-base-300 bg-gradient-to-br px-4 py-20 sm:px-6 lg:px-8"
 	>
 		<h2 class="mb-12 text-center text-3xl font-bold sm:text-4xl" data-aos="fade-up">
@@ -245,7 +245,7 @@
 				</div>
 			{/each}
 		</div>
-	</section>
+	</section> -->
 
 	<!-- Call to Action -->
 	<section class="bg-base-200 rounded-box px-4 py-20 text-center sm:px-6 lg:px-8">

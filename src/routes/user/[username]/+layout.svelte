@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import { page } from '$app/state';
+	import Icon from '@iconify/svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { userProfile, user } = data;
@@ -33,7 +34,10 @@
 				</div>
 				<div class="flex items-center gap-4">
 					{#if userProfile.id === user?.id}
-						<a href="/account" class="btn btn-primary"> Edit Profile </a>
+						<a href="/account" class="btn btn-primary hidden sm:flex"> Edit Profile </a>
+						<a href="/account" class="btn btn-primary flex items-center gap-2 sm:hidden">
+							<Icon icon="mdi:pencil-outline" class="h-5 w-5" />
+						</a>
 					{/if}
 				</div>
 			</div>
@@ -61,7 +65,7 @@
 		</a>
 	</div>
 
-	<div class="mt-6">
+	<div class="bg-base-200 container mt-6 rounded-lg p-4">
 		{@render children()}
 	</div>
 </div>

@@ -211,7 +211,7 @@
 				</div>
 			{:else}
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{#each leaderboardEntries as entry, index}
+					{#each leaderboardEntries as entry, index (entry.id)}
 						<LeaderboardAttemptCard attempt={entry} rank={index + 1} />
 					{/each}
 				</div>

@@ -74,7 +74,7 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each integrations as integration}
+								{#each integrations as integration (integration.id)}
 									<tr>
 										<td>
 											<div class="flex items-center gap-2">

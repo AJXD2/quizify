@@ -6,7 +6,7 @@
 </script>
 
 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-	{#each userProfile.quizzes as quiz}
+	{#each userProfile.quizzes as quiz (quiz.id)}
 		<div class="card bg-base-100 shadow-xl">
 			<div class="card-body">
 				<h2 class="card-title">{quiz.title}</h2>

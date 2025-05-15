@@ -161,7 +161,7 @@
 			{/if}
 
 			<ul class="steps steps-horizontal mb-4 w-full">
-				{#each quiz.questions as question, index}
+				{#each quiz.questions as question, index (question.id)}
 					<button
 						class="step cursor-pointer"
 						class:step-accent={index <= currentQuestionIndex}
@@ -190,7 +190,7 @@
 							{quiz.questions[currentQuestionIndex].text}
 						</span>
 						<div class="divider"></div>
-						{#each quiz.questions[currentQuestionIndex].answers as answer}
+						{#each quiz.questions[currentQuestionIndex].answers as answer (answer.id)}
 							<div class="form-control w-full">
 								<label
 									class="label btn btn-ghost w-full cursor-pointer justify-start gap-3 rounded-lg py-2"

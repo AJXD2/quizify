@@ -4,9 +4,9 @@ import { desc, eq } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
 import { error } from '@sveltejs/kit';
 
-export const load = (async ({ params }) => {
+export const load = (async ({ params, locals }) => {
 	const { username } = params;
-
+	const { user: currentUser } = locals;
 	const userProfile = await db.query.user.findFirst({
 		where: eq(user.username, username),
 		columns: {
@@ -31,6 +31,7 @@ export const load = (async ({ params }) => {
 		throw error(404, 'User not found');
 	}
 	return {
-		userProfile
+		userProfile,
+		user: currentUser
 	};
 }) satisfies LayoutServerLoad;

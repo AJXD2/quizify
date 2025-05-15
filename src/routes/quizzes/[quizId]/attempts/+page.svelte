@@ -81,7 +81,7 @@
 
 			{#if attempts && attempts.length > 0}
 				<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{#each attempts as attempt}
+					{#each attempts as attempt (attempt.id)}
 						<AttemptCard {attempt} showUser={false} onForfeit={() => forfeitAttempt(attempt.id)} />
 					{/each}
 				</div>
