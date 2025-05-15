@@ -3,7 +3,7 @@ import { auth } from '$lib/auth';
 
 export async function GET({ request }) {
 	const session = await auth.api.getSession(request);
-
+	
 	if (!session) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}

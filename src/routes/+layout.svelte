@@ -3,7 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { authClient } from '$lib/auth/client';
 	import { banner } from '$lib/stores/banner';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { onMount } from 'svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
 	import { page } from '$app/state';
@@ -65,6 +65,12 @@
 		}
 	];
 
+	$effect(() => {
+		if (!$session.data?.user || $session.data?.user) {
+			invalidateAll();
+		}
+	});
+
 	onMount(() => {
 		if ($session.data?.user) {
 			// If user is logged in, check if they have a username
@@ -93,7 +99,7 @@
 	/>
 </svelte:head>
 
-<div class="bg-base-100 flex min-h-[100dvh] flex-col">
+<div class="bg-base-100 mb-12 flex min-h-[100dvh] flex-col sm:mb-2">
 	<header
 		class="navbar bg-base-200/95 supports-[backdrop-filter]:bg-base-200/80 px-4 shadow-lg backdrop-blur"
 	>
