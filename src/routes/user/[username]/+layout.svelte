@@ -22,7 +22,7 @@
 				<div class="flex items-center gap-4">
 					<div class="avatar flex-none">
 						<div class="w-16 rounded-full">
-							<img src={userProfile.image} alt={userProfile.username} />
+							<img src={`/api/avatar/${userProfile.username}`} alt={userProfile.username} />
 						</div>
 					</div>
 					<div class="flex-auto">
