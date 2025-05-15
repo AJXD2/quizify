@@ -1,7 +1,24 @@
-import { pgTable, uuid, text, timestamp, boolean, integer, pgEnum } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	uuid,
+	text,
+	timestamp,
+	boolean,
+	integer,
+	pgEnum,
+	index
+} from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 export const difficulty = pgEnum('difficulty', ['easy', 'medium', 'hard']);
+
+const timestamps = {
+	createdAt: timestamp('created_at').notNull().defaultNow(),
+	updatedAt: timestamp('updated_at')
+		.notNull()
+		.defaultNow()
+		.$onUpdate(() => new Date())
+};
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -9,24 +26,22 @@ export const user = pgTable('user', {
 	email: text('email').notNull().unique(),
 	emailVerified: boolean('email_verified').notNull(),
 	image: text('image'),
-	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull(),
 	username: text('username').unique(),
 	displayUsername: text('display_username'),
-	twoFactorEnabled: boolean('two_factor_enabled')
+	twoFactorEnabled: boolean('two_factor_enabled'),
+	...timestamps
 });
 
 export const session = pgTable('session', {
 	id: text('id').primaryKey(),
 	expiresAt: timestamp('expires_at').notNull(),
 	token: text('token').notNull().unique(),
-	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull(),
 	ipAddress: text('ip_address'),
 	userAgent: text('user_agent'),
 	userId: text('user_id')
 		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' })
+		.references(() => user.id, { onDelete: 'cascade' }),
+	...timestamps
 });
 
 export const account = pgTable('account', {
@@ -43,8 +58,7 @@ export const account = pgTable('account', {
 	refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
 	scope: text('scope'),
 	password: text('password'),
-	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull()
+	...timestamps
 });
 
 export const verification = pgTable('verification', {
@@ -52,8 +66,7 @@ export const verification = pgTable('verification', {
 	identifier: text('identifier').notNull(),
 	value: text('value').notNull(),
 	expiresAt: timestamp('expires_at').notNull(),
-	createdAt: timestamp('created_at'),
-	updatedAt: timestamp('updated_at')
+	...timestamps
 });
 
 export const twoFactor = pgTable('two_factor', {
@@ -62,25 +75,33 @@ export const twoFactor = pgTable('two_factor', {
 	backupCodes: text('backup_codes').notNull(),
 	userId: text('user_id')
 		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' })
+		.references(() => user.id, { onDelete: 'cascade' }),
+	...timestamps
 });
 
 // Application Tables
 
-export const quiz = pgTable('quiz', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	title: text('title').notNull(),
-	description: text('description'),
-	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull(),
-	creatorId: text('creator_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	timeLimit: integer('time_limit'),
-	difficulty: difficulty('difficulty').default('medium'),
-	tags: text('tags').array(),
-	instructions: text('instructions')
-});
+export const quiz = pgTable(
+	'quiz',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		title: text('title').notNull(),
+		description: text('description'),
+		creatorId: text('creator_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		timeLimit: integer('time_limit'),
+		difficulty: difficulty('difficulty').default('medium'),
+		tags: text('tags').array(),
+		instructions: text('instructions'),
+		...timestamps
+	},
+	(table) => [
+		index('title_idx').on(table.title),
+		index('creator_idx').on(table.creatorId),
+		index('tags_idx').on(table.tags)
+	]
+);
 
 export const question = pgTable('question', {
 	id: uuid('id').primaryKey().defaultRandom(),
@@ -88,8 +109,7 @@ export const question = pgTable('question', {
 		.notNull()
 		.references(() => quiz.id, { onDelete: 'cascade' }),
 	text: text('text').notNull(),
-	createdAt: timestamp('created_at').notNull(),
-	updatedAt: timestamp('updated_at').notNull()
+	...timestamps
 });
 
 export const answer = pgTable('answer', {
@@ -98,22 +118,32 @@ export const answer = pgTable('answer', {
 		.notNull()
 		.references(() => question.id, { onDelete: 'cascade' }),
 	text: text('text').notNull(),
-	isCorrect: boolean('is_correct').notNull()
+	isCorrect: boolean('is_correct').notNull(),
+	...timestamps
 });
 
-export const attempt = pgTable('attempt', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	quizId: uuid('quiz_id')
-		.notNull()
-		.references(() => quiz.id, { onDelete: 'cascade' }),
-	startedAt: timestamp('started_at').notNull(),
-	completedAt: timestamp('completed_at'),
-	score: integer('score'),
-	timeSpent: integer('time_spent')
-});
+export const attempt = pgTable(
+	'attempt',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		quizId: uuid('quiz_id')
+			.notNull()
+			.references(() => quiz.id, { onDelete: 'cascade' }),
+		startedAt: timestamp('started_at').notNull(),
+		completedAt: timestamp('completed_at'),
+		score: integer('score'),
+		timeSpent: integer('time_spent'),
+		...timestamps
+	},
+	(table) => [
+		index('score_idx').on(table.score),
+		index('completed_at_idx').on(table.completedAt),
+		index('user_quiz_idx').on(table.userId, table.quizId)
+	]
+);
 
 export const attemptAnswer = pgTable('attempt_answer', {
 	id: uuid('id').primaryKey().defaultRandom(),
@@ -126,21 +156,31 @@ export const attemptAnswer = pgTable('attempt_answer', {
 	answerId: uuid('answer_id')
 		.notNull()
 		.references(() => answer.id, { onDelete: 'cascade' }),
-	isCorrect: boolean('is_correct').notNull()
+	isCorrect: boolean('is_correct').notNull(),
+	...timestamps
 });
 
-export const leaderboard = pgTable('leaderboard', {
-	id: uuid('id').primaryKey().defaultRandom(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => user.id, { onDelete: 'cascade' }),
-	quizId: uuid('quiz_id')
-		.notNull()
-		.references(() => quiz.id, { onDelete: 'cascade' }),
-	score: integer('score').notNull(),
-	attempts: integer('attempts').notNull(),
-	lastAttemptAt: timestamp('last_attempt_at').notNull()
-});
+export const leaderboard = pgTable(
+	'leaderboard',
+	{
+		id: uuid('id').primaryKey().defaultRandom(),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		quizId: uuid('quiz_id')
+			.notNull()
+			.references(() => quiz.id, { onDelete: 'cascade' }),
+		score: integer('score').notNull(),
+		attempts: integer('attempts').notNull(),
+		lastAttemptAt: timestamp('last_attempt_at').notNull(),
+		...timestamps
+	},
+	(table) => [
+		index('leaderboard_score_idx').on(table.score),
+		index('quiz_score_idx').on(table.quizId, table.score),
+		index('leaderboard_user_quiz_idx').on(table.userId, table.quizId)
+	]
+);
 
 // RELATIONS
 

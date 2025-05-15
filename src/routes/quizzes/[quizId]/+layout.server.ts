@@ -1,72 +1,63 @@
-import { db } from '$lib/server/db';
-import { eq, and } from 'drizzle-orm';
 import type { LayoutServerLoad } from './$types';
-import { attempt, quiz } from '$lib/server/db/schema';
 import { error } from '@sveltejs/kit';
-import { auth } from '$lib/auth';
+import { db } from '$lib/server/db';
+import { quiz, attempt } from '$lib/server/db/schema';
+import { and, desc, eq } from 'drizzle-orm';
 
-export const load = (async ({ params, request }) => {
-	const session = await auth.api.getSession(request);
+export const load = (async ({ params, locals }) => {
+	const { user } = locals;
+	const quizId = params.quizId;
 
-	const currentQuiz = await db.query.quiz
+	const quizData = await db.query.quiz
 		.findFirst({
-			where: eq(quiz.id, params.quizId),
+			where: eq(quiz.id, quizId),
 			with: {
+				questions: {
+					with: { answers: true }
+				},
 				creator: {
 					columns: {
+						id: true,
+						image: true,
 						username: true,
-						image: true
+						displayUsername: true
 					}
 				},
-				questions: {
-					with: {
-						answers: {
-							columns: {
-								isCorrect: false
-							}
-						}
-					}
-				},
-				attempts: {
-					columns: {
-						startedAt: true,
-						completedAt: true
-					},
-					with: {
-						user: {
-							columns: {
-								username: true,
-								image: true
-							}
-						}
-					}
-				}
+				attempts: true
 			}
 		})
 		.catch(() => {
 			throw error(404, 'Quiz not found');
 		});
-	const userAttempts = await db.query.attempt.findMany({
-		where: session?.user.id
-			? and(eq(attempt.quizId, params.quizId), eq(attempt.userId, session.user.id))
-			: eq(attempt.quizId, params.quizId),
-		with: {
-			user: {
-				columns: {
-					username: true,
-					image: true
-				}
-			},
-			answers: true
-		}
-	});
 
-	if (!currentQuiz) {
+	if (!quizData) {
 		throw error(404, 'Quiz not found');
 	}
 
+	const userAttempts = user?.id
+		? await db.query.attempt.findMany({
+				where: and(eq(attempt.quizId, quizId), eq(attempt.userId, user.id)),
+				with: {
+					answers: {
+						with: {
+							question: true,
+							answer: true
+						}
+					},
+					user: {
+						columns: {
+							id: true,
+							image: true,
+							username: true,
+							displayUsername: true
+						}
+					}
+				},
+				orderBy: [desc(attempt.startedAt)]
+			})
+		: [];
 	return {
-		quiz: currentQuiz,
+		quiz: quizData,
 		userAttempts
 	};
 }) satisfies LayoutServerLoad;

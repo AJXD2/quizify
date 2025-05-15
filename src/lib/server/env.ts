@@ -10,7 +10,7 @@ const envSchema = z.object({
 		.describe('The environment')
 		.default('development'),
 	BETTER_AUTH_SECRET: z.string().describe('The better auth secret'),
-	BETTER_AUTH_URL: z.string().url().describe('The better auth URL'),
+	VITE_APP_URL: z.string().url().describe('The app URL'),
 	GOOGLE_CLIENT_ID: z.string().describe('The better auth google client ID'),
 	GOOGLE_CLIENT_SECRET: z.string().describe('The better auth google client secret'),
 	DISCORD_CLIENT_ID: z.string().describe('The discord client ID'),

@@ -7,21 +7,27 @@ export async function GET({ url }) {
 	const username = url.searchParams.get('username');
 
 	if (!username) {
-		return json({ available: false, error: 'No username provided' }, { status: 400 });
+		return json({ available: false, error: 'Username is required' }, { status: 400 });
 	}
 
 	if (username.length < 3) {
 		return json({ available: false, error: 'Username must be at least 3 characters' });
 	}
 
-	try {
-		const existingUser = await db.query.user.findFirst({
-			where: eq(user.username, username)
+	if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+		return json({
+			available: false,
+			error: 'Username can only contain letters, numbers, underscores, and hyphens'
 		});
-
-		return json({ available: !existingUser });
-	} catch (error) {
-		console.error('Error checking username:', error);
-		return json({ available: false, error: 'Error checking username' }, { status: 500 });
 	}
+
+	const existingUser = await db.query.user.findFirst({
+		where: eq(user.username, username),
+		columns: { id: true }
+	});
+
+	return json({
+		available: !existingUser,
+		error: existingUser ? 'Username is already taken' : undefined
+	});
 }

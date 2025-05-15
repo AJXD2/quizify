@@ -1,56 +1,75 @@
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
-import { answer, attempt, attemptAnswer, question } from '$lib/server/db/schema';
-import { getSessionOrRedirect } from '$lib/server/utils';
-import { eq, and, isNull } from 'drizzle-orm';
-
-export const load = (async ({ params, request }) => {
-	const session = await getSessionOrRedirect(request, request.url);
-
+import { attempt, attemptAnswer, answer } from '$lib/server/db/schema';
+import { and, eq, isNull } from 'drizzle-orm';
+import { loginRedirect } from '$lib/utils';
+export const load = (async ({ params, locals }) => {
+	const { user } = locals;
+	if (!user) {
+		throw loginRedirect('/quizzes/' + params.quizId + '/take');
+	}
+	// Direct query to get active attempt
 	const activeAttempt = await db.query.attempt.findFirst({
 		where: and(
+			eq(attempt.userId, user.id),
 			eq(attempt.quizId, params.quizId),
-			eq(attempt.userId, session.user.id),
 			isNull(attempt.completedAt)
-		)
+		),
+		with: {
+			answers: {
+				with: {
+					question: true,
+					answer: true
+				}
+			}
+		}
 	});
+
 	return {
-		activeAttempt: activeAttempt
+		activeAttempt
 	};
 }) satisfies PageServerLoad;
 
 export const actions = {
-	startAttempt: async ({ request, params }) => {
-		const session = await getSessionOrRedirect(request, request.url);
-		const quizId = params.quizId;
-
-		if (!quizId || !session) {
-			return fail(400, { success: false, message: 'Quiz ID and user ID are required' });
+	startAttempt: async ({ params, locals }) => {
+		const { user } = locals;
+		if (!user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
 		}
 
-		const newAttempt = await db
+		const quizId = params.quizId;
+
+		if (!quizId) {
+			return fail(400, { success: false, message: 'Quiz ID is required' });
+		}
+
+		// Direct query to create new attempt
+		const [newAttempt] = await db
 			.insert(attempt)
 			.values({
-				quizId: quizId,
-				userId: session.user.id,
+				userId: user.id,
+				quizId,
 				startedAt: new Date()
 			})
 			.returning();
 
 		return {
 			success: true,
-			attempt: newAttempt[0]
+			attempt: newAttempt
 		};
 	},
 
-	submitAnswer: async ({ request }) => {
-		await getSessionOrRedirect(request, request.url);
+	submitAnswer: async ({ request, locals }) => {
+		const { user } = locals;
+		if (!user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
 
 		const formData = await request.formData();
-		const attemptId = formData.get('attemptId');
-		const questionId = formData.get('questionId');
-		const answerId = formData.get('answerId');
+		const attemptId = formData.get('attemptId') as string;
+		const questionId = formData.get('questionId') as string;
+		const answerId = formData.get('answerId') as string;
 
 		if (!attemptId || !questionId || !answerId) {
 			return fail(400, {
@@ -59,90 +78,112 @@ export const actions = {
 			});
 		}
 
+		// Direct query to check if the attempt exists and belongs to the user
 		const currentAttempt = await db.query.attempt.findFirst({
-			where: eq(attempt.id, attemptId as string)
+			where: and(eq(attempt.id, attemptId), eq(attempt.userId, user.id)),
+			with: {
+				answers: {
+					with: {
+						question: true,
+						answer: true
+					}
+				},
+				user: {
+					columns: {
+						id: true,
+						image: true,
+						username: true,
+						displayUsername: true
+					}
+				},
+				quiz: {
+					with: {
+						questions: {
+							with: {
+								answers: true
+							}
+						}
+					}
+				}
+			}
 		});
 
 		if (!currentAttempt) {
 			return fail(400, { success: false, message: 'Attempt not found' });
 		}
 
-		const currentQuestion = await db.query.question.findFirst({
-			where: eq(question.id, questionId as string)
+		// Direct query to get the selected answer
+		const selectedAnswer = await db.query.answer.findFirst({
+			where: eq(answer.id, answerId)
 		});
 
-		if (!currentQuestion) {
-			return fail(400, { success: false, message: 'Question not found' });
-		}
-
-		const currentAnswer = await db.query.answer.findFirst({
-			where: eq(answer.id, answerId as string)
-		});
-
-		if (!currentAnswer) {
+		if (!selectedAnswer) {
 			return fail(400, { success: false, message: 'Answer not found' });
 		}
 
-		const isCorrect = currentAnswer.isCorrect;
+		// Direct query to submit the answer
+		const [submittedAnswer] = await db
+			.insert(attemptAnswer)
+			.values({
+				attemptId,
+				questionId,
+				answerId,
+				isCorrect: selectedAnswer.isCorrect
+			})
+			.returning();
 
-		const previousAnswer = await db.query.attemptAnswer.findFirst({
-			where: and(
-				eq(attemptAnswer.attemptId, attemptId as string),
-				eq(attemptAnswer.questionId, questionId as string)
-			)
-		});
-		let newAttemptAnswer;
-		if (previousAnswer) {
-			newAttemptAnswer = await db
-				.update(attemptAnswer)
-				.set({
-					answerId: answerId as string,
-					isCorrect: isCorrect
-				})
-				.where(eq(attemptAnswer.id, previousAnswer.id))
-				.returning();
-		} else {
-			newAttemptAnswer = await db
-				.insert(attemptAnswer)
-				.values({
-					attemptId: attemptId as string,
-					questionId: questionId as string,
-					answerId: answerId as string,
-					isCorrect: isCorrect
-				})
-				.returning();
-		}
 		return {
 			success: true,
-			attemptAnswer: newAttemptAnswer[0]
+			attemptAnswer: submittedAnswer
 		};
 	},
 
-	endAttempt: async ({ request }) => {
-		await getSessionOrRedirect(request, request.url);
+	endAttempt: async ({ request, locals }) => {
+		const { user } = locals;
+		if (!user) {
+			return fail(401, { success: false, message: 'Unauthorized' });
+		}
 
 		const formData = await request.formData();
-		const attemptId = formData.get('attemptId');
+		const attemptId = formData.get('attemptId') as string;
 
 		if (!attemptId) {
 			return fail(400, { success: false, message: 'Attempt ID is required' });
 		}
+		const currentAttempt = await db.query.attempt.findFirst({
+			where: eq(attempt.id, attemptId)
+		});
 
-		const updatedAttempt = await db
+		if (!currentAttempt) {
+			return fail(400, { success: false, message: 'Attempt not found' });
+		}
+		// Direct query to get all answers for this attempt
+		const answers = await db.query.attemptAnswer.findMany({
+			where: eq(attemptAnswer.attemptId, attemptId)
+		});
+
+		const totalQuestions = answers.length;
+		const correctAnswers = answers.filter((a) => a.isCorrect).length;
+		const score = Math.round((correctAnswers / totalQuestions) * 100);
+
+		// Direct query to update the attempt
+		const [updatedAttempt] = await db
 			.update(attempt)
 			.set({
-				completedAt: new Date()
+				completedAt: new Date(),
+				score,
+				timeSpent: new Date().getTime() - currentAttempt.startedAt.getTime()
 			})
-			.where(eq(attempt.id, attemptId as string))
+			.where(eq(attempt.id, attemptId))
 			.returning();
 
-		if (!updatedAttempt || updatedAttempt.length === 0) {
+		if (!updatedAttempt) {
 			return fail(400, { success: false, message: 'Failed to end attempt' });
 		}
 
 		return {
 			success: true,
-			attempt: updatedAttempt[0]
+			attempt: updatedAttempt
 		};
 	}
 } satisfies Actions;

@@ -18,7 +18,7 @@
 		<div class="bg-base-200 rounded-box h-full w-full p-4 md:w-64">
 			<h2 class="mb-4 text-xl font-bold">Account Settings</h2>
 			<ul class="menu bg-base-200 rounded-box w-full">
-				{#each subsections as section}
+				{#each subsections as section (section.path)}
 					<li>
 						<a href={section.path} class={page.url.pathname === section.path ? 'bg-base-300' : ''}>
 							{section.name}

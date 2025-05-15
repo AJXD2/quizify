@@ -102,15 +102,18 @@
 	};
 
 	const handleEndAttempt: SubmitFunction = () => {
-		return ({ update, result, formData }) => {
+		return async ({ update, result }) => {
 			if (!attempt) {
 				toasts.error({ title: 'Error', message: 'Attempt not found' });
 				return;
 			}
 			isSubmitting = true;
-			update();
-			if (result.type === 'success') {
-				goto(`/quizzes/${quiz.id}/results/${attempt.id}`);
+
+			await update();
+
+			if (result.type === 'success' && result.data) {
+				const completedAttempt = result.data.attempt;
+				await goto(`/quizzes/${quiz.id}/attempts/${completedAttempt.id}`);
 			} else if (result.type === 'failure') {
 				toasts.error({
 					title: 'Error while ending attempt',
@@ -158,7 +161,7 @@
 			{/if}
 
 			<ul class="steps steps-horizontal mb-4 w-full">
-				{#each quiz.questions as question, index}
+				{#each quiz.questions as question, index (question.id)}
 					<button
 						class="step cursor-pointer"
 						class:step-accent={index <= currentQuestionIndex}
@@ -187,10 +190,10 @@
 							{quiz.questions[currentQuestionIndex].text}
 						</span>
 						<div class="divider"></div>
-						{#each quiz.questions[currentQuestionIndex].answers as answer}
-							<div class="form-control">
+						{#each quiz.questions[currentQuestionIndex].answers as answer (answer.id)}
+							<div class="form-control w-full">
 								<label
-									class="label hover:bg-base-200 cursor-pointer justify-start gap-3 rounded-lg py-2"
+									class="label btn btn-ghost w-full cursor-pointer justify-start gap-3 rounded-lg py-2"
 								>
 									<input
 										type="radio"

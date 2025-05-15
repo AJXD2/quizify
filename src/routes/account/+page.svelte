@@ -4,7 +4,31 @@
 	import Icon from '@iconify/svelte';
 	import { fly } from 'svelte/transition';
 	import { toasts } from '$lib/stores/toast';
-	// User account settings
+	import { invalidate } from '$app/navigation';
+
+	// Extracted reusable functions for validation
+	function validatePasswordChange(
+		currentPassword: string,
+		newPassword: string,
+		confirmPassword: string
+	): string | null {
+		if (newPassword !== confirmPassword) {
+			return 'New passwords do not match';
+		}
+		if (newPassword.length < 8) {
+			return 'Password must be at least 8 characters';
+		}
+		return null;
+	}
+
+	function validateUsername(username: string): string | null {
+		if (!username || username.length < 3) {
+			return 'Username must be at least 3 characters';
+		}
+		return null;
+	}
+
+	// Simplified state management
 	let currentPassword = $state('');
 	let newPassword = $state('');
 	let confirmPassword = $state('');
@@ -14,34 +38,88 @@
 	let successMessage = $state('');
 	let errorMessage = $state('');
 	let isLoading = $state(false);
-	// Track original and current values
+	let displayUsername = $state('');
+
 	let originalUsername = $state('');
+	let originalDisplayUsername = $state('');
 	let originalName = $state('');
 	let originalEmail = $state('');
-	let hasUnsavedChanges = $derived(
-		username !== originalUsername ||
+
+	let hasCredentialAccount = $state(false);
+	let newEmail = $state('');
+	let changeEmailModal: HTMLDialogElement | null = null;
+
+	let hasUnsavedChanges = $derived.by(
+		() =>
+			username !== originalUsername ||
 			name !== originalName ||
 			email !== originalEmail ||
+			displayUsername !== originalDisplayUsername ||
 			(currentPassword && newPassword && confirmPassword)
 	);
 
-	let usernameErrorClosed = $state(false);
-	let hasCredentialAccount = $state(false);
-	// Get current user data
+	let usernameStatus = $state<'idle' | 'checking' | 'available' | 'unavailable' | 'invalid'>(
+		'idle'
+	);
+	let usernameMessage = $state('');
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const checkUsername = async (value: string) => {
+		if (debounceTimer) clearTimeout(debounceTimer);
+
+		if (value === originalUsername) {
+			usernameStatus = 'idle';
+			usernameMessage = '';
+			return;
+		}
+
+		if (!value) {
+			usernameStatus = 'idle';
+			usernameMessage = '';
+			return;
+		}
+
+		if (value.length < 3) {
+			usernameStatus = 'invalid';
+			usernameMessage = 'Username must be at least 3 characters';
+			return;
+		}
+
+		usernameStatus = 'checking';
+		usernameMessage = 'Checking availability...';
+
+		debounceTimer = setTimeout(async () => {
+			try {
+				const response = await fetch(`/api/check-username?username=${encodeURIComponent(value)}`);
+				const data = await response.json();
+
+				if (data.available) {
+					usernameStatus = 'available';
+					usernameMessage = 'Username is available';
+				} else {
+					usernameStatus = 'unavailable';
+					usernameMessage = data.error || 'Username is already taken';
+				}
+			} catch (err) {
+				usernameStatus = 'idle';
+				usernameMessage = 'Error checking availability';
+			}
+		}, 500);
+	};
 
 	onMount(async () => {
 		isLoading = true;
 		const session = await authClient.getSession();
 		if (session.data?.user) {
-			console.log(session.data.user);
 			username = session.data.user.username || '';
 			email = session.data.user.email || '';
 			name = session.data.user.name || '';
+			displayUsername = session.data.user.displayUsername || '';
 
-			// Store original values
 			originalUsername = username;
 			originalEmail = email;
 			originalName = name;
+			originalDisplayUsername = displayUsername;
 		}
 		const accounts = await authClient.listAccounts();
 		hasCredentialAccount =
@@ -53,6 +131,7 @@
 		username = originalUsername;
 		email = originalEmail;
 		name = originalName;
+		displayUsername = originalDisplayUsername;
 		currentPassword = '';
 		newPassword = '';
 		confirmPassword = '';
@@ -62,93 +141,70 @@
 		errorMessage = '';
 		successMessage = '';
 
-		let hasPasswordChange = currentPassword && newPassword && confirmPassword;
-		let hasProfileChange =
-			username !== originalUsername || name !== originalName || email !== originalEmail;
+		// Ensure changes were made before validating
 
-		// Validate password change if needed
-		if (hasPasswordChange) {
-			if (newPassword !== confirmPassword) {
-				errorMessage = 'New passwords do not match';
-				return;
-			}
-
-			if (newPassword.length < 8) {
-				errorMessage = 'Password must be at least 8 characters';
-				return;
-			}
+		const passwordError = validatePasswordChange(currentPassword, newPassword, confirmPassword);
+		if (passwordError && (currentPassword || newPassword || confirmPassword)) {
+			errorMessage = passwordError;
+			return;
 		}
 
-		// Validate username if changed
-		if (username !== originalUsername) {
-			if (!username || username.length < 3) {
-				errorMessage = 'Username must be at least 3 characters';
-				return;
-			}
+		const usernameError = validateUsername(username);
+		if (usernameError && username !== originalUsername) {
+			errorMessage = usernameError;
+			return;
 		}
 
 		try {
-			// Update username if changed
+			// Username
 			if (username !== originalUsername) {
-				const userData = await authClient.updateUser({
-					username
-				});
-
+				const userData = await authClient.updateUser({ username });
 				if (userData.error?.message) {
 					errorMessage = userData.error.message;
 					return;
 				}
-
 				originalUsername = username;
 			}
-
-			// Update name and email if changed
-			if (hasProfileChange && (name !== originalName || email !== originalEmail)) {
-				const userData = await authClient.updateUser({
-					name,
-					username
-				});
-				const emailChange = await authClient.changeEmail({
-					newEmail: email,
-					callbackURL: '/account'
-				});
-
+			// Display Username
+			if (displayUsername !== originalDisplayUsername) {
+				const userData = await authClient.updateUser({ displayUsername });
 				if (userData.error?.message) {
 					errorMessage = userData.error.message;
 					return;
 				}
-
-				if (emailChange.error?.message) {
-					errorMessage = emailChange.error.message;
-					return;
-				}
-
-				originalName = name;
-				originalEmail = email;
+				originalDisplayUsername = displayUsername;
 			}
-
-			// Update password if provided
-			if (hasPasswordChange) {
-				const passwordData = await authClient.changePassword({
-					currentPassword,
-					newPassword
-				});
-
+			// Password
+			if (currentPassword && newPassword && confirmPassword) {
+				const passwordData = await authClient.changePassword({ currentPassword, newPassword });
 				if (passwordData.error?.message) {
 					errorMessage = passwordData.error.message;
 					return;
 				}
-
 				currentPassword = '';
 				newPassword = '';
 				confirmPassword = '';
 			}
 
-			successMessage = 'Changes saved successfully';
+			toasts.success({ title: 'Changes saved', message: 'Your changes have been saved.' });
 		} catch (err) {
 			errorMessage = 'An error occurred while saving changes';
 			console.error(err);
 		}
+	}
+
+	async function onChangeEmail() {
+		changeEmailModal?.close();
+		if (!newEmail) {
+			toasts.error({ title: 'Error changing email', message: 'Please use a valid email' });
+			return;
+		}
+		const { data, error } = await authClient.changeEmail({ newEmail });
+		if (error?.message) {
+			toasts.error({ title: 'Error changing email', message: error.message });
+			return;
+		}
+		toasts.success({ title: 'Email sent', message: 'Check your email for instructions.' });
 	}
 </script>
 
@@ -188,7 +244,7 @@
 			<div
 				in:fly={{ y: 100, delay: 1.5 }}
 				out:fly={{ y: 100, delay: 1.5 }}
-				class="bg-base-200 rounded-box border-base-300 fixed bottom-0 left-1/2 z-50 mx-auto mb-6 flex w-full max-w-xl -translate-x-1/2 items-center justify-between border px-4 py-3 shadow-lg"
+				class="bg-base-200 rounded-box border-base-300 fixed bottom-16 left-1/2 z-50 mx-auto mb-6 flex w-xs max-w-xl -translate-x-1/2 items-center justify-between border px-4 py-3 shadow-lg sm:bottom-0 sm:w-full"
 			>
 				<div class="text-base-content flex items-center gap-2">
 					<Icon icon="mdi:alert-circle" class="text-warning h-5 w-5" />
@@ -208,31 +264,36 @@
 					<h2 class="card-title">Profile Information</h2>
 					<p class="mb-4 text-sm opacity-70">Your basic account information.</p>
 
-					<div class="grid gap-4 md:grid-cols-2">
-						<div class="form-control w-full">
+					<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+						<div class="form-control flex flex-col">
 							<label for="name" class="label">
 								<span class="label-text">Name</span>
 							</label>
-							<input id="name" type="text" class="input input-bordered w-full" bind:value={name} />
+							<input id="name" type="text" class="input input-bordered" bind:value={name} />
 						</div>
 
-						<div class="form-control w-full">
+						<div class="form-control flex flex-col">
 							<label for="email" class="label">
 								<span>Email</span>
 							</label>
+
 							<input
 								id="email"
 								type="email"
-								class="input input-bordered w-full"
+								class="input input-bordered"
 								bind:value={email}
 								disabled
 							/>
-							<label for="email" class="label">
-								<span class="text-sm opacity-70"
-									>Email is not editable. Please contact support to change your email.</span
-								>
-							</label>
 						</div>
+					</div>
+
+					<div class="form-control">
+						<button
+							class="btn btn-outline"
+							onclick={() => {
+								changeEmailModal?.showModal();
+							}}><Icon icon="mdi:pencil" class="h-6 w-6" />Change Email</button
+						>
 					</div>
 				</div>
 			</div>
@@ -244,7 +305,7 @@
 					<p class="mb-4 text-sm opacity-70">
 						Your username is visible to other users and is used for identification.
 					</p>
-					{#if !originalUsername && !usernameErrorClosed}
+					{#if !originalUsername}
 						<div class="alert alert-warning mb-4 flex w-full justify-between">
 							<div class="flex items-center gap-2">
 								<Icon icon="mdi:alert-circle" class="h-5 w-5" />
@@ -252,28 +313,71 @@
 							</div>
 							<button
 								class="btn btn-sm btn-circle btn-ghost"
-								onclick={() => (usernameErrorClosed = true)}
+								onclick={() => (originalUsername = username)}
 							>
 								<Icon icon="mdi:close" class="h-5 w-5" />
 							</button>
 						</div>
 					{/if}
 
-					<div class="form-control w-full max-w-md">
-						<label for="username" class="label">
-							<span class="label-text">Username</span>
-						</label>
-						<input
-							id="username"
-							type="text"
-							class="input input-bordered w-full"
-							placeholder="Enter username"
-							bind:value={username}
-							minlength="3"
-						/>
-						<label for="username" class="label">
-							<span class="label-text-alt">Must be at least 3 characters</span>
-						</label>
+					<div class="grid gap-4 md:grid-cols-2">
+						<div class="form-control w-full max-w-md">
+							<label for="username" class="label">
+								<span class="label-text">Username</span>
+							</label>
+							<div class="relative">
+								<input
+									id="username"
+									type="text"
+									class="input input-bordered w-full"
+									class:input-success={usernameStatus === 'available'}
+									class:input-error={usernameStatus === 'unavailable' ||
+										usernameStatus === 'invalid'}
+									autocomplete="off"
+									placeholder="Enter username"
+									bind:value={username}
+									oninput={() => checkUsername(username)}
+								/>
+								{#if usernameStatus === 'checking'}
+									<div class="absolute top-1/2 right-3 -translate-y-1/2">
+										<span class="loading loading-spinner loading-xs"></span>
+									</div>
+								{:else if usernameStatus === 'available'}
+									<div class="text-success absolute top-1/2 right-3 -translate-y-1/2">
+										<Icon icon="mdi:check-circle" class="h-5 w-5" />
+									</div>
+								{:else if usernameStatus === 'unavailable'}
+									<div class="text-error absolute top-1/2 right-3 -translate-y-1/2">
+										<Icon icon="mdi:close-circle" class="h-5 w-5" />
+									</div>
+								{/if}
+							</div>
+							<label for="username" class="label">
+								<span
+									class={usernameStatus === 'available'
+										? 'text-success'
+										: usernameStatus === 'unavailable'
+											? 'text-error'
+											: usernameStatus === 'invalid'
+												? 'text-error'
+												: ''}
+								>
+									{usernameMessage || 'Must be at least 3 characters'}
+								</span>
+							</label>
+						</div>
+						<div class="form-control w-full max-w-md">
+							<label for="displayUsername" class="label">
+								<span class="label-text">Display Username</span>
+							</label>
+							<input
+								id="displayUsername"
+								type="text"
+								class="input input-bordered w-full"
+								placeholder="Enter display username"
+								bind:value={displayUsername}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -365,3 +469,32 @@
 		</div>
 	</div>
 {/if}
+<dialog
+	id="emailChangeModal"
+	class="modal modal-bottom sm:modal-middle"
+	bind:this={changeEmailModal}
+>
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Change Email</h3>
+		<div class="space-y-4 py-4">
+			<input
+				type="email"
+				placeholder="New Email"
+				bind:value={newEmail}
+				class="input input-bordered w-full"
+			/>
+			<div class="modal-action">
+				<button
+					class="btn btn-outline"
+					onclick={() => {
+						changeEmailModal?.close();
+					}}>Cancel</button
+				>
+				<button class="btn btn-primary" onclick={onChangeEmail}>Confirm Change</button>
+			</div>
+		</div>
+	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>

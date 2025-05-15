@@ -27,12 +27,11 @@ export const auth = betterAuth({
 		maxPasswordLength: 128,
 		requireEmailVerification: true,
 		async sendResetPassword(data) {
-			const response = await sendEmail(
+			await sendEmail(
 				data.user.email,
 				'Reset Password',
 				`Click <a href="${data.url}">here</a> to reset your password`
 			);
-			console.log(response);
 		}
 	},
 	emailVerification: {
@@ -68,7 +67,7 @@ export const auth = betterAuth({
 		}
 	},
 
-	url: env.BETTER_AUTH_URL,
+	url: env.VITE_APP_URL,
 	secret: env.BETTER_AUTH_SECRET
 });
 

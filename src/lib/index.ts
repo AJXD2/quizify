@@ -1,4 +1,4 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 import {
 	quiz,
 	user,
@@ -9,7 +9,7 @@ import {
 	leaderboard
 } from './server/db/schema';
 
-// For SELECT queries (what you get back from the database)
+// For SELECT queries - base types from the database
 export type Quiz = InferSelectModel<typeof quiz>;
 export type User = InferSelectModel<typeof user>;
 export type Question = InferSelectModel<typeof question>;
@@ -18,19 +18,61 @@ export type Attempt = InferSelectModel<typeof attempt>;
 export type AttemptAnswer = InferSelectModel<typeof attemptAnswer>;
 export type Leaderboard = InferSelectModel<typeof leaderboard>;
 
-// For a quiz with its creator relation included
-export type QuizWithCreator = Quiz & {
-	creator: User;
+// For INSERT queries - base types from the database
+export type NewQuiz = InferInsertModel<typeof quiz>;
+export type NewQuestion = InferInsertModel<typeof question>;
+export type NewAnswer = InferInsertModel<typeof answer>;
+export type NewAttempt = InferInsertModel<typeof attempt>;
+export type NewAttemptAnswer = InferInsertModel<typeof attemptAnswer>;
+export type NewLeaderboard = InferInsertModel<typeof leaderboard>;
+
+// Extended types for the quiz editor
+export type QuestionWithAnswers = NewQuestion & {
+	answers: Array<{
+		id?: string;
+		text: string;
+		isCorrect: boolean;
+	}>;
 };
 
-// For a quiz with creator profile info
-export type Profile = Pick<User, 'username' | 'image'>;
-export type QuizWithProfile = Omit<
-	Quiz & {
-		creator: Profile;
-	},
-	'creatorId'
->;
+// Relation types - using Drizzle's type system
+export type QuizWithCreator = Quiz & {
+	creator: Profile;
+};
+
+export type QuizWithQuestions = Quiz & {
+	questions: Question[];
+};
+
+export type QuizWithQuestionsAndAnswers = Quiz & {
+	questions: (Question & {
+		answers: Answer[];
+	})[];
+};
+
+export type QuizWithCreatorAndQuestions = Quiz & {
+	creator: Profile;
+	questions: Question[];
+};
+// TODO: Fix this in future. This is atrocious.
+export type QuizWithCreatorAndQuestionsAndAnswers = Quiz & {
+	creator: Profile;
+	questions: (Question & {
+		answers: Answer[];
+	})[];
+};
+
+export type CompleteAttempt = Attempt & {
+	answers: (AttemptAnswer & {
+		question: Question;
+		answer: Answer;
+	})[];
+	user: Profile;
+	quiz: QuizWithQuestionsAndAnswers;
+};
+
+// Profile type
+export type Profile = Pick<User, 'id' | 'username' | 'image' | 'displayUsername'>;
 
 // Type for pagination options
 export type PaginationOptions = {
@@ -38,5 +80,10 @@ export type PaginationOptions = {
 	limit?: number;
 };
 
-// Utility type for relationships
-export type WithRelations<T, R extends Record<string, unknown>> = T & R;
+// Pagination result type
+export type PaginatedResult<T> = {
+	items: T[];
+	page: number;
+	totalPages: number;
+	totalCount: number;
+};

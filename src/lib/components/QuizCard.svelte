@@ -1,34 +1,43 @@
 <script lang="ts">
-	import type { QuizWithProfile } from '$lib';
-	const { quiz }: { quiz: QuizWithProfile } = $props();
+	import { goto } from '$app/navigation';
+	import type { QuizWithCreator } from '$lib';
+	import Profile from './Profile.svelte';
+
+	const { quiz }: { quiz: QuizWithCreator } = $props();
 </script>
 
-<div
-	id={`quiz-card-${quiz.id}`}
-	class="card bg-base-200 w-full transition-shadow duration-300 hover:shadow-lg"
+<article
+	class="group card bg-base-100 focus:ring-primary relative block w-full shadow-md transition-shadow duration-200 hover:shadow-lg focus:ring-2 focus:outline-none"
 >
-	<div class="card-body">
-		<div class="flex items-center gap-3">
-			<a href={`/quizzes/${quiz.id}`}>
-				<h2 class="card-title text-xl font-bold">{quiz.title}</h2>
-				<label for={`quiz-card-${quiz.id}`} class="absolute inset-0 cursor-pointer"></label>
-			</a>
-		</div>
+	<div
+		class="card-body cursor-pointer"
+		role="link"
+		tabindex="0"
+		onkeydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				goto(`/quizzes/${quiz.id}`);
+			}
+		}}
+		onclick={() => goto(`/quizzes/${quiz.id}`)}
+	>
+		<header class="relative mb-2">
+			<h2 id={`quiz-title-${quiz.id}`} class="card-title text-xl">
+				{quiz.title}
+			</h2>
+			<div class="text-base-content/50 relative z-10 text-sm">
+				<Profile user={quiz.creator} />
+			</div>
+		</header>
 
-		{#if quiz.description}
-			<p class="card-text text-gray-600">{quiz.description}</p>
-		{/if}
+		<p class="text-base-content text-base">{quiz.description}</p>
 
-		<div class=" mt-4 flex items-center gap-2 text-sm text-gray-500">
-			<a
-				href={`/users/${quiz.creator.username}`}
-				class="link hover:text-primary z-[1] flex items-center gap-2 transition-colors"
+		<div class="card-actions mt-4 justify-end">
+			<button
+				class="btn btn-primary btn-sm relative z-20"
+				onclick={() => goto(`/quizzes/${quiz.id}`)}
 			>
-				{#if quiz.creator.image}
-					<img src={quiz.creator.image} alt="Creator" class="h-7 rounded-full" />
-				{/if}
-				@{quiz.creator.username}
-			</a>
+				Take Quiz
+			</button>
 		</div>
 	</div>
-</div>
+</article>
