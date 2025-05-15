@@ -1,25 +1,55 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import QuizCard from '$lib/components/QuizCard.svelte';
 	import Icon from '@iconify/svelte';
 	import type { PageData } from './$types';
 	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
-	const { quizzes, page: currentPage, totalPages } = data;
+
+	// Reactive derivations from the data prop
+	let quizzes = $derived(data.quizzes);
+	let currentPage = $derived(data.page);
+	let totalPages = $derived(data.totalPages);
 
 	let searchQuery = $state(page.url.searchParams.get('q') || '');
 	let selectedDifficulty = $state(page.url.searchParams.get('difficulty') || '');
 	let sortBy = $state(page.url.searchParams.get('sort') || 'newest');
 
-	function updateFilters() {
-		const params = new URLSearchParams();
-		if (searchQuery) params.set('q', searchQuery);
-		if (selectedDifficulty) params.set('difficulty', selectedDifficulty);
-		if (sortBy) params.set('sort', sortBy);
-		params.set('page', '1');
-		goto(`/quizzes?${params.toString()}`);
+	let debounceTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
+	let searchInputElement = $state<HTMLInputElement | null>(null);
+	let focusSearchAfterNavigate = $state(false);
+	let isLoading = $state(false);
+
+	function updateFilters(triggeredBySearchInput = false) {
+		isLoading = true;
+		if (debounceTimeout) {
+			clearTimeout(debounceTimeout);
+		}
+		debounceTimeout = setTimeout(() => {
+			const params = new URLSearchParams();
+			if (searchQuery) params.set('q', searchQuery);
+			if (selectedDifficulty) params.set('difficulty', selectedDifficulty);
+			if (sortBy) params.set('sort', sortBy);
+			params.set('page', '1');
+
+			if (triggeredBySearchInput && searchQuery) {
+				focusSearchAfterNavigate = true;
+			}
+
+			goto(`/quizzes?${params.toString()}`, { invalidateAll: true });
+			isLoading = false;
+		}, 500); // 500ms debounce
 	}
+
+	afterNavigate(() => {
+		if (focusSearchAfterNavigate && searchInputElement) {
+			searchInputElement.focus();
+			const length = searchInputElement.value.length;
+			searchInputElement.setSelectionRange(length, length);
+			focusSearchAfterNavigate = false;
+		}
+	});
 </script>
 
 <div class="flex flex-col gap-6 p-6">
@@ -41,17 +71,15 @@
 			<div class="flex flex-col gap-4 sm:flex-row sm:items-center">
 				<div class="flex-1">
 					<div class="form-control w-full">
-						<div class="input-group">
+						<div class="input-group w-full">
 							<input
 								type="text"
 								placeholder="Search quizzes..."
-								class="input input-bordered flex-1"
+								class="input input-bordered w-full"
 								bind:value={searchQuery}
-								oninput={() => updateFilters()}
+								bind:this={searchInputElement}
+								oninput={() => updateFilters(true)}
 							/>
-							<button class="btn btn-square btn-primary">
-								<Icon icon="fa-solid:search" />
-							</button>
 						</div>
 					</div>
 				</div>
@@ -79,8 +107,12 @@
 				</div>
 			</div>
 		</div>
-		{#if quizzes.length === 0}
-			<div class="bg-base-200 flex flex-col items-center gap-4 rounded-lg p-12">
+		{#if isLoading}
+			<div class="flex min-h-48 items-center justify-center">
+				<div class="loading loading-spinner loading-lg"></div>
+			</div>
+		{:else if quizzes.length === 0}
+			<div class="bg-base-300 flex flex-col items-center gap-4 rounded-lg p-12">
 				<Icon icon="fa-solid:book-open" class="h-12 w-12 opacity-40" />
 				<p class="text-center text-lg text-gray-500">
 					{searchQuery || selectedDifficulty
