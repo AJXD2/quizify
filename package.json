@@ -55,6 +55,7 @@
 		"drizzle-orm": "^0.40.0",
 		"drizzle-zod": "^0.7.1",
 		"resend": "^4.2.0",
+		"svelte-gestures": "^5.1.4",
 		"tsparticles": "^3.8.1",
 		"zod": "^3.24.2"
 	}

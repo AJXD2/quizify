@@ -46,9 +46,9 @@
 <div class="flex flex-col gap-6">
 	<!-- Quiz header section -->
 	<div class="rounded-box bg-base-200 p-6 shadow-lg">
-		<div class="mb-4 flex items-center justify-between">
-			<h1 class="text-3xl font-bold">{quiz.title}</h1>
-			<div class="flex gap-2">
+		<div class="mb-4 flex items-center justify-between p-2">
+			<h1 class="text-xl font-bold">{quiz.title}</h1>
+			<div class="flex gap-4">
 				{#if isCreator}
 					<a href="/quizzes/{quiz.id}/statistics" class="btn btn-ghost">
 						<Icon icon="mdi:chart-box" class="mr-2 h-5 w-5" />

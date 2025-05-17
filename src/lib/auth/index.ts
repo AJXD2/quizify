@@ -3,7 +3,13 @@ import { db } from '../server/db';
 import { twoFactor, username } from 'better-auth/plugins';
 import { betterAuth } from 'better-auth';
 import { sendEmail } from '$lib/server/email';
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET, BETTER_AUTH_SECRET } from '$env/static/private';
+import {
+	GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET,
+	DISCORD_CLIENT_ID,
+	DISCORD_CLIENT_SECRET,
+	BETTER_AUTH_SECRET
+} from '$env/static/private';
 import { PUBLIC_APP_URL } from '$env/static/public';
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
