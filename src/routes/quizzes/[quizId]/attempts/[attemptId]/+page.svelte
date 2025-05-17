@@ -1,8 +1,10 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import Profile from '$lib/components/Profile.svelte';
 	import { calculateTimeSpent, calculateScore } from '$lib/utils';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
 	const { attempt, quiz } = data;
@@ -15,6 +17,11 @@
 </script>
 
 {#if !attempt || !quiz}
+	<Seo
+		title="Loading Attempt... - Quizify"
+		description="Loading quiz attempt details."
+		url={page.url.href}
+	/>
 	<div class="flex min-h-[50vh] items-center justify-center">
 		<div class="flex flex-col items-center gap-4">
 			<span class="loading loading-spinner loading-lg"></span>
@@ -22,6 +29,13 @@
 		</div>
 	</div>
 {:else}
+	<Seo
+		title={`Attempt Results: ${quiz.title} - Quizify`}
+		description={`Results for your attempt on the quiz: ${quiz.title}. Score: ${score}%.`}
+		url={page.url.href}
+		type="article"
+		keywords={`quizify, ${quiz.title}, quiz results, attempt details, ${attempt.user.username}`}
+	/>
 	<div class="flex flex-col gap-6">
 		<!-- Header section -->
 		<div class="rounded-box bg-base-200 p-6">

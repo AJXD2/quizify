@@ -7,6 +7,8 @@
 	import { toasts } from '$lib/stores/toast';
 	import { onDestroy, onMount } from 'svelte';
 	import Icon from '@iconify/svelte';
+	import Seo from '$lib/components/Seo.svelte';
+	import { page } from '$app/state';
 
 	const { data }: { data: PageData } = $props();
 	const { quiz, userAttempts } = data;
@@ -124,6 +126,14 @@
 		};
 	};
 </script>
+
+<Seo
+	title={`Taking Quiz: ${quiz?.title || 'Quiz'} - Quizify`}
+	description={`Attempting the quiz: ${quiz?.title || 'Quiz'}. Focus and good luck!`}
+	url={page.url.href}
+	type="article"
+	keywords={`quizify, ${quiz?.title}, take quiz, quiz attempt`}
+/>
 
 <div class="mx-auto flex max-w-3xl flex-col items-center justify-center p-3 sm:p-6">
 	<h1 class="text-center text-xl font-bold sm:text-2xl">{quiz.title}</h1>

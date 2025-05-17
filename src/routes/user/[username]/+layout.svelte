@@ -3,6 +3,7 @@
 	import type { LayoutData } from './$types';
 	import { page } from '$app/state';
 	import Icon from '@iconify/svelte';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 	const { userProfile, user } = data;
@@ -14,6 +15,15 @@
 		username = userProfile.username || '';
 	});
 </script>
+
+<Seo
+	title={`${userProfile?.displayUsername || userProfile?.username || 'User'}'s Space - Quizify`}
+	description={`Explore ${userProfile?.displayUsername || userProfile?.username || 'User'}'s quizzes, attempts, and activity on Quizify.`}
+	url={page.url.href}
+	image={userProfile?.image || '/logo.png'}
+	type="profile"
+	keywords={`quizify, ${userProfile?.username}, user profile, quizzes, attempts`}
+/>
 
 <div class="container mx-auto px-4 py-6">
 	<div class="card bg-base-200">

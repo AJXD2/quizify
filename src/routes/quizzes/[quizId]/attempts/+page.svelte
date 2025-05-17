@@ -1,8 +1,10 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import AttemptCard from '$lib/components/AttemptCard.svelte';
 	import { toasts } from '$lib/stores/toast';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
 	const { userAttempts } = data;
@@ -29,6 +31,14 @@
 		attempts = attempts.filter((attempt) => attempt.id !== attemptId);
 	};
 </script>
+
+<Seo
+	title={`Your Attempts for ${data.quiz?.title || 'Quiz'} - Quizify`}
+	description={`View all your attempts for the quiz: ${data.quiz?.title || 'Quiz'}.`}
+	url={page.url.href}
+	type="website"
+	keywords={`quizify, ${data.quiz?.title}, quiz attempts, my attempts`}
+/>
 
 <div class="flex flex-col gap-6">
 	<!-- Header section -->

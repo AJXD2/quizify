@@ -1,8 +1,9 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import LeaderboardAttemptCard from '$lib/components/LeaderboardAttemptCard.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
-	import Profile from '$lib/components/Profile.svelte';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
 	const { leaderboardEntries, quiz } = data;
@@ -24,6 +25,14 @@
 
 	const totalParticipants = new Set(leaderboardEntries.map((entry) => entry.user.id)).size;
 </script>
+
+<Seo
+	title={`Leaderboard: ${quiz?.title || 'Quiz'} - Quizify`}
+	description={`See the top scores and rankings for the quiz: ${quiz?.title || 'Quiz'}.`}
+	url={page.url.href}
+	type="website"
+	keywords={`quizify, ${quiz?.title}, leaderboard, quiz scores, rankings`}
+/>
 
 <div class="flex flex-col gap-6">
 	<!-- Header section -->

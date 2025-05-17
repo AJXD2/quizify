@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import { toasts } from '$lib/stores/toast';
@@ -6,6 +7,7 @@
 	import type { QuizType } from '$lib/schemas/quiz';
 	import SuperDebug from 'sveltekit-superforms';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	const { data } = $props();
 	const { form, errors, delayed, enhance, message } = superForm<QuizType>(data.form, {
@@ -71,6 +73,14 @@
 		);
 	};
 </script>
+
+<Seo
+	title={`Edit Quiz: ${data.form.data.title || 'Quiz'} - Quizify`}
+	description={`Editing the quiz: ${data.form.data.title || 'Quiz'}. Make your changes and save.`}
+	url={page.url.href}
+	type="website"
+	keywords={`quizify, ${data.form.data.title}, edit quiz, quiz editor`}
+/>
 
 <!-- <SuperDebug data={$form} /> -->
 

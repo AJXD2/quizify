@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import Profile from '$lib/components/Profile.svelte';
@@ -8,7 +9,7 @@
 	import { toasts } from '$lib/stores/toast';
 	import { page } from '$app/state';
 
-	const { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 	const { quiz, userAttempts: allAttempts } = data;
 
 	// Calculate statistics - adjust based on actual data model
@@ -43,12 +44,20 @@
 	const isCreator = $derived(quiz.creator.id === page.data.user?.id);
 </script>
 
+<Seo
+	title={`${quiz?.title || 'Quiz Details'} - Quizify`}
+	description={`${quiz?.description || 'Check out this quiz on Quizify.'} Created by ${quiz?.creator?.displayUsername || quiz?.creator?.username || 'a user'}.`}
+	url={page.url.href}
+	type="article"
+	keywords={`quizify, ${quiz?.title}, quiz, trivia, ${quiz?.tags?.join(', ')}`}
+/>
+
 <div class="flex flex-col gap-6">
 	<!-- Quiz header section -->
 	<div class="rounded-box bg-base-200 p-6 shadow-lg">
-		<div class="mb-4 flex items-center justify-between">
-			<h1 class="text-3xl font-bold">{quiz.title}</h1>
-			<div class="flex gap-2">
+		<div class="mb-4 flex items-center justify-between p-2">
+			<h1 class="text-xl font-bold">{quiz.title}</h1>
+			<div class="flex gap-4">
 				{#if isCreator}
 					<a href="/quizzes/{quiz.id}/statistics" class="btn btn-ghost">
 						<Icon icon="mdi:chart-box" class="mr-2 h-5 w-5" />

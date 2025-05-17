@@ -7,7 +7,8 @@
 	import { onMount } from 'svelte';
 	import Toaster from '$lib/components/Toaster.svelte';
 	import { page } from '$app/state';
-
+	import Brand from '$lib/components/Brand.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	let { children } = $props();
 	const session = authClient.useSession();
 
@@ -92,6 +93,14 @@
 	});
 </script>
 
+<Seo
+	title="Quizify"
+	description="Create, share, and play engaging quizzes."
+	url={page.url.href}
+	type="website"
+	keywords="quiz, quiz app, sveltekit, education, fun"
+/>
+
 <svelte:head>
 	<meta
 		name="viewport"
@@ -101,10 +110,12 @@
 
 <div class="bg-base-100 mb-12 flex min-h-[100dvh] flex-col sm:mb-2">
 	<header
-		class="navbar bg-base-200/95 supports-[backdrop-filter]:bg-base-200/80 px-4 shadow-lg backdrop-blur"
+		class="navbar bg-base-200/95 supports-[backdrop-filter]:bg-base-200/80 px-4 shadow-lg backdrop-blur sm:sticky sm:top-0 sm:z-50"
 	>
 		<div class="navbar-start">
-			<a href="/" class="btn btn-ghost text-lg font-bold normal-case sm:text-xl">Quizify</a>
+			<a href="/" class="btn btn-ghost text-lg font-bold normal-case sm:text-xl">
+				<Brand />
+			</a>
 		</div>
 		<div class="navbar-center hidden gap-1 md:flex">
 			{#each navLinks as link (link.href)}
@@ -182,20 +193,6 @@
 	<main class="container mx-auto mb-2 flex-1 overflow-hidden px-4 py-6 sm:mb-1 sm:py-8">
 		{@render children()}
 	</main>
-
-	<footer class="footer footer-center bg-base-200 text-base-content hidden p-4 sm:flex md:p-6">
-		<div class="grid grid-flow-row gap-3 text-sm sm:grid-flow-col sm:gap-6">
-			<a href="/about" class="link link-hover">About</a>
-			<a href="/contact" class="link link-hover">Contact</a>
-			<a href="/terms-of-service" class="link link-hover">Terms of Service</a>
-			<a href="/privacy-policy" class="link link-hover">Privacy Policy</a>
-		</div>
-		<div>
-			<p class="text-center text-xs opacity-80 sm:text-sm">
-				Copyright © {new Date().getFullYear()} - Quizify. All rights reserved.
-			</p>
-		</div>
-	</footer>
 
 	<div class="dock fixed right-0 bottom-0 left-0 z-50 sm:hidden">
 		<a href="/" class:dock-active={page.url.pathname === '/'}>

@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { onMount, type Snippet } from 'svelte';
 	import type { LayoutProps } from './$types';
 	import Icon from '@iconify/svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Profile from '$lib/components/Profile.svelte';
 	import { goto, onNavigate } from '$app/navigation';
 	import { authClient } from '$lib/auth/client';
 	import { toasts } from '$lib/stores/toast';
+	import { swipe, type SwipeCustomEvent } from 'svelte-gestures';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data, children }: LayoutProps = $props();
 	const { quiz } = data;
@@ -56,130 +57,154 @@
 		deleteModal?.close();
 		deleteLoading = false;
 	};
+
+	function handleSwipe(event: SwipeCustomEvent) {
+		if (event.detail.direction === 'right') {
+			isSidebarOpen = true;
+		} else {
+			isSidebarOpen = false;
+		}
+	}
 </script>
 
-<div class="drawer lg:drawer-open bg-base-100 min-h-[100dvh]">
-	<input id="quiz-drawer" type="checkbox" class="drawer-toggle" bind:checked={isSidebarOpen} />
+<Seo
+	title={`${quiz?.title || 'Quiz'} - Quizify`}
+	description={`Learn more about the quiz: ${quiz?.title || 'Unnamed Quiz'} on Quizify.`}
+	url={page.url.href}
+	type="website"
+	keywords={`quizify, ${quiz?.title}, quiz details`}
+/>
 
-	<div class="drawer-content flex flex-col">
-		<!-- Top navbar for mobile view -->
-		<div class="navbar bg-base-100 border-base-300 sticky top-0 z-5 border-b px-2 sm:hidden">
-			<div class="flex-none">
-				<label for="quiz-drawer" class="btn btn-square btn-ghost drawer-button">
-					<Icon icon="mdi:menu" class="h-6 w-6" />
-				</label>
+<div
+	use:swipe={() => ({
+		timeframe: 300,
+		minSwipeDistance: 60
+	})}
+	onswipe={handleSwipe}
+>
+	<div class="drawer lg:drawer-open bg-base-100 min-h-[100dvh]">
+		<input id="quiz-drawer" type="checkbox" class="drawer-toggle" bind:checked={isSidebarOpen} />
+
+		<div class="drawer-content flex flex-col">
+			<!-- Top navbar for mobile view -->
+			<div class="navbar bg-base-100 border-base-300 sticky top-0 z-5 border-b px-2 sm:hidden">
+				<div class="flex-none">
+					<label for="quiz-drawer" class="btn btn-square btn-ghost drawer-button">
+						<Icon icon="mdi:menu" class="h-6 w-6" />
+					</label>
+				</div>
+				<div class="flex flex-1 justify-between px-2">
+					<span class="truncate text-lg font-bold">{quiz.title}</span>
+					<Profile user={quiz.creator} />
+				</div>
 			</div>
-			<div class="flex flex-1 justify-between px-2">
-				<span class="truncate text-lg font-bold">{quiz.title}</span>
-				<Profile user={quiz.creator} />
-			</div>
+
+			<!-- Main content area -->
+			<main class="flex-1 overflow-y-auto p-2 pb-20 md:p-6 md:pb-6">
+				{@render children()}
+			</main>
 		</div>
 
-		<!-- Main content area -->
-		<main class="flex-1 overflow-y-auto p-2 pb-20 md:p-6 md:pb-6">
-			{@render children()}
-		</main>
-	</div>
+		<!-- Sidebar -->
+		<aside class="drawer-side z-[9]">
+			<label for="quiz-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+			<div class="bg-base-200 text-base-content flex h-full w-64 flex-col overflow-y-auto">
+				<!-- Quiz navigation -->
+				<div class="flex-1 p-4">
+					<!-- Quiz title header -->
+					<div class="mb-4 border-b py-3 break-words">
+						<h2 class="text-xl font-bold">{quiz.title}</h2>
+						<p class="mt-1 truncate text-sm opacity-70">
+							{quiz.description || 'No description provided'}
+						</p>
+						<span class="mt-2 flex items-center gap-2 text-sm">
+							Creator: <Profile user={quiz.creator} />
+						</span>
+					</div>
 
-	<!-- Sidebar -->
-	<aside class="drawer-side z-[9]">
-		<label for="quiz-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-		<div class="bg-base-200 text-base-content flex h-full w-64 flex-col overflow-y-auto">
-			<!-- Quiz navigation -->
-			<div class="flex-1 p-4">
-				<!-- Quiz title header -->
-				<div class="mb-4 border-b py-3 break-words">
-					<h2 class="text-xl font-bold">{quiz.title}</h2>
-					<p class="mt-1 truncate text-sm opacity-70">
-						{quiz.description || 'No description provided'}
-					</p>
-					<span class="mt-2 flex items-center gap-2 text-sm">
-						Creator: <Profile user={quiz.creator} />
-					</span>
-				</div>
-
-				<!-- Main navigation -->
-				<div class="menu rounded-box bg-base-200 w-full gap-1">
-					<h3 class="mt-2 mb-1 pl-4 text-sm font-semibold uppercase opacity-70">Navigation</h3>
-					<li>
-						<a
-							href="/quizzes/{quiz.id}"
-							class="flex items-center gap-3 {$page.url.pathname === `/quizzes/${quiz.id}`
-								? 'bg-base-content/15'
-								: ''}"
-						>
-							<Icon icon="mdi:view-dashboard-outline" class="h-5 w-5" />
-							<span>Overview</span>
-						</a>
-					</li>
-					<li>
-						<a
-							href="/quizzes/{quiz.id}/attempts"
-							class="flex items-center gap-3 {$page.url.pathname.includes('/attempts')
-								? 'bg-base-content/15'
-								: ''}"
-						>
-							<Icon icon="mdi:history" class="h-5 w-5" />
-							<span>Attempts</span>
-						</a>
-					</li>
-					<li>
-						<a
-							href="/quizzes/{quiz.id}/leaderboard"
-							class="flex items-center gap-3 {$page.url.pathname.includes('/leaderboard')
-								? 'bg-base-content/15'
-								: ''}"
-						>
-							<Icon icon="mdi:poll" class="h-5 w-5" />
-							<span>Leaderboard</span>
-						</a>
-					</li>
-					<li>
-						<a
-							href="/quizzes/{quiz.id}/take"
-							class="flex items-center gap-3 {$page.url.pathname.includes('/take')
-								? 'bg-base-content/15'
-								: ''}"
-						>
-							<Icon icon="mdi:pencil-outline" class="h-5 w-5" />
-							<span>Take Quiz</span>
-						</a>
-					</li>
-					{#if $session.data?.user.id === quiz.creatorId}
-						<div class="divider">Creator Actions</div>
+					<!-- Main navigation -->
+					<div class="menu rounded-box bg-base-200 w-full gap-1">
+						<h3 class="mt-2 mb-1 pl-4 text-sm font-semibold uppercase opacity-70">Navigation</h3>
 						<li>
 							<a
-								href="/quizzes/{quiz.id}/edit"
-								class="text-warning flex items-center gap-3 {$page.url.pathname.includes('/edit')
-									? 'bg-warning-content/15'
+								href="/quizzes/{quiz.id}"
+								class="flex items-center gap-3 {page.url.pathname === `/quizzes/${quiz.id}`
+									? 'bg-base-content/15'
 									: ''}"
 							>
-								<Icon icon="mdi:puzzle-edit" class="h-5 w-5" />
-								<span>Edit Quiz</span>
+								<Icon icon="mdi:view-dashboard-outline" class="h-5 w-5" />
+								<span>Overview</span>
 							</a>
 						</li>
 						<li>
-							<button
-								class="text-error flex items-center gap-3"
-								onclick={() => deleteModal?.showModal()}
+							<a
+								href="/quizzes/{quiz.id}/attempts"
+								class="flex items-center gap-3 {page.url.pathname.includes('/attempts')
+									? 'bg-base-content/15'
+									: ''}"
 							>
-								<Icon icon="mdi:delete" class="h-5 w-5" />
-								<span>Delete Quiz</span>
-							</button>
+								<Icon icon="mdi:history" class="h-5 w-5" />
+								<span>Attempts</span>
+							</a>
 						</li>
-					{/if}
+						<li>
+							<a
+								href="/quizzes/{quiz.id}/leaderboard"
+								class="flex items-center gap-3 {page.url.pathname.includes('/leaderboard')
+									? 'bg-base-content/15'
+									: ''}"
+							>
+								<Icon icon="mdi:poll" class="h-5 w-5" />
+								<span>Leaderboard</span>
+							</a>
+						</li>
+						<li>
+							<a
+								href="/quizzes/{quiz.id}/take"
+								class="flex items-center gap-3 {page.url.pathname.includes('/take')
+									? 'bg-base-content/15'
+									: ''}"
+							>
+								<Icon icon="mdi:pencil-outline" class="h-5 w-5" />
+								<span>Take Quiz</span>
+							</a>
+						</li>
+						{#if $session.data?.user.id === quiz.creatorId}
+							<div class="divider">Creator Actions</div>
+							<li>
+								<a
+									href="/quizzes/{quiz.id}/edit"
+									class="text-warning flex items-center gap-3 {page.url.pathname.includes('/edit')
+										? 'bg-warning-content/15'
+										: ''}"
+								>
+									<Icon icon="mdi:puzzle-edit" class="h-5 w-5" />
+									<span>Edit Quiz</span>
+								</a>
+							</li>
+							<li>
+								<button
+									class="text-error flex items-center gap-3"
+									onclick={() => deleteModal?.showModal()}
+								>
+									<Icon icon="mdi:delete" class="h-5 w-5" />
+									<span>Delete Quiz</span>
+								</button>
+							</li>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Bottom actions -->
+				<div class="mt-auto mb-16 border-t p-4">
+					<a href="/quizzes" class="btn btn-outline btn-block gap-2">
+						<Icon icon="mdi:arrow-left" class="h-5 w-5" />
+						<span>Back to Quizzes</span>
+					</a>
 				</div>
 			</div>
-
-			<!-- Bottom actions -->
-			<div class="mt-auto mb-16 border-t p-4">
-				<a href="/quizzes" class="btn btn-outline btn-block gap-2">
-					<Icon icon="mdi:arrow-left" class="h-5 w-5" />
-					<span>Back to Quizzes</span>
-				</a>
-			</div>
-		</div>
-	</aside>
+		</aside>
+	</div>
 </div>
 
 <dialog bind:this={deleteModal} onsubmit={handleDelete} class="modal">

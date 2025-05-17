@@ -7,4 +7,18 @@
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
+	"build": {
+		"command": "bun run build",
+		"cwd": "."
+	},
+
+	
+	// Configuration specific to `wrangler dev` for local development
+	"dev": {
+		"ip": "127.0.0.1", 
+		"port": 5173,
+		"local_protocol": "http", 
+		
+	},
+	
 }
