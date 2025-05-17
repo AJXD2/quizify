@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount, type Snippet } from 'svelte';
 	import type { LayoutProps } from './$types';
 	import Icon from '@iconify/svelte';
 	import { page } from '$app/state';
@@ -8,6 +7,7 @@
 	import { authClient } from '$lib/auth/client';
 	import { toasts } from '$lib/stores/toast';
 	import { swipe, type SwipeCustomEvent } from 'svelte-gestures';
+	import Seo from '$lib/components/Seo.svelte';
 
 	let { data, children }: LayoutProps = $props();
 	const { quiz } = data;
@@ -66,6 +66,14 @@
 		}
 	}
 </script>
+
+<Seo
+	title={`${quiz?.title || 'Quiz'} - Quizify`}
+	description={`Learn more about the quiz: ${quiz?.title || 'Unnamed Quiz'} on Quizify.`}
+	url={page.url.href}
+	type="website"
+	keywords={`quizify, ${quiz?.title}, quiz details`}
+/>
 
 <div
 	use:swipe={() => ({

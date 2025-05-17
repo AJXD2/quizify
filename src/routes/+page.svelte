@@ -7,6 +7,9 @@
 	import Particles, { particlesInit } from '@tsparticles/svelte';
 	import { loadSlim } from '@tsparticles/slim';
 	import type { Container, IOptions, RecursivePartial } from '@tsparticles/engine';
+	import Seo from '$lib/components/Seo.svelte';
+	import { page } from '$app/state';
+
 	let particlesConfig: RecursivePartial<IOptions> = {
 		fullscreen: {
 			enable: false
@@ -113,16 +116,6 @@
 		}
 	];
 
-	const testimonials = [
-		{ name: 'Example User', quote: 'Quizify turned study night into game night!', delay: 100 },
-		{ name: 'Example User', quote: 'I’ve never learned this much while laughing.', delay: 200 },
-		{
-			name: 'Example User',
-			quote: 'Made a quiz on cryptids. It blew up. Now I’m famous.',
-			delay: 300
-		}
-	];
-
 	let { data }: PageProps = $props();
 	const { stats } = data;
 	console.log(stats);
@@ -133,6 +126,12 @@
 		});
 	});
 </script>
+
+<Seo
+	title="Quizify - Home"
+	description="Welcome to Quizify! Challenge your brain, flex your trivia skills, and share your genius with the world. Create, play, and learn with interactive quizzes."
+	url={page.url.href}
+/>
 
 <div class="space-y-2">
 	<!-- Hero Section -->

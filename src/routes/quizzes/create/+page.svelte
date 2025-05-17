@@ -1,10 +1,22 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { PageProps } from './$types';
+	import Seo from '$lib/components/Seo.svelte';
+	import { page } from '$app/state';
+
 	const { data, form }: PageProps = $props();
 
 	let tags = $state('');
 </script>
+
+<Seo
+	title="Create a New Quiz - Quizify"
+	description="Create your own engaging quizzes on Quizify. Share your knowledge and challenge others with custom-made quizzes."
+	url={page.url.href}
+	image="/logo.png"
+	type="website"
+	keywords="quizify, create quiz, new quiz, quiz maker, educational tool"
+/>
 
 <div class="container mx-auto max-w-4xl px-6 py-10">
 	<div class="card bg-base-100 border-base-200 border shadow-2xl">

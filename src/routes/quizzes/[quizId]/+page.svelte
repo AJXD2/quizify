@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Seo from '$lib/components/Seo.svelte';
 	import type { PageData } from './$types';
 	import Icon from '@iconify/svelte';
 	import Profile from '$lib/components/Profile.svelte';
@@ -8,7 +9,7 @@
 	import { toasts } from '$lib/stores/toast';
 	import { page } from '$app/state';
 
-	const { data }: { data: PageData } = $props();
+	let { data }: { data: PageData } = $props();
 	const { quiz, userAttempts: allAttempts } = data;
 
 	// Calculate statistics - adjust based on actual data model
@@ -42,6 +43,14 @@
 	// Check if user is quiz creator
 	const isCreator = $derived(quiz.creator.id === page.data.user?.id);
 </script>
+
+<Seo
+	title={`${quiz?.title || 'Quiz Details'} - Quizify`}
+	description={`${quiz?.description || 'Check out this quiz on Quizify.'} Created by ${quiz?.creator?.displayUsername || quiz?.creator?.username || 'a user'}.`}
+	url={page.url.href}
+	type="article"
+	keywords={`quizify, ${quiz?.title}, quiz, trivia, ${quiz?.tags?.join(', ')}`}
+/>
 
 <div class="flex flex-col gap-6">
 	<!-- Quiz header section -->

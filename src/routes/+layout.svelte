@@ -8,6 +8,7 @@
 	import Toaster from '$lib/components/Toaster.svelte';
 	import { page } from '$app/state';
 	import Brand from '$lib/components/Brand.svelte';
+	import Seo from '$lib/components/Seo.svelte';
 	let { children } = $props();
 	const session = authClient.useSession();
 
@@ -91,6 +92,14 @@
 		}
 	});
 </script>
+
+<Seo
+	title="Quizify"
+	description="Create, share, and play engaging quizzes."
+	url={page.url.href}
+	type="website"
+	keywords="quiz, quiz app, sveltekit, education, fun"
+/>
 
 <svelte:head>
 	<meta
